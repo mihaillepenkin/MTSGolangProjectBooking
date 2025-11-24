@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"hotel_service/internal/infrastructure/api"
 	"hotel_service/internal/infrastructure/config"
 	"log/slog"
@@ -14,17 +13,11 @@ import (
 )
 
 func main() {
-	db, err := config.ConfigureDb()
-	if err != nil {
-		slog.Error(err.Error())
+	db := config.ConfigureDb()
+	if db == nil {
+		slog.Error("Error connecting to database")
 	}
-	defer func(db *sql.DB) {
-		err := db.Close()
-		if err != nil {
-			slog.Error(err.Error())
-		}
-	}(db)
-	err = db.Ping()
+	err := db.Ping()
 	if err != nil {
 		slog.Error(err.Error())
 	}
@@ -32,15 +25,7 @@ func main() {
 	hotelHandler := api.HotelHandler{}
 	hotelHandler.Initialize(db)
 
-	mux := http.NewServeMux()
-
-	mux.HandleFunc("GET /api/v1/hotels", hotelHandler.GetAllHotels)
-
-	mux.HandleFunc("POST /api/v1/hotels", hotelHandler.AddHotelInfo)
-
-	mux.HandleFunc("PUT /api/v1/hotels", hotelHandler.UpdateHotelInfo)
-
-	mux.HandleFunc("GET /api/v1/hotels/{id}", hotelHandler.GetHotelById)
+	mux := api.CreateRouting(&hotelHandler)
 
 	server := &http.Server{
 		Addr:    ":8082",
@@ -48,7 +33,7 @@ func main() {
 	}
 	go func() {
 		err := server.ListenAndServe()
-		slog.Debug("Server is running on port 8082...")
+		slog.Info("Server is running on port 8082...")
 		if err != nil {
 			slog.Error(err.Error())
 		}
@@ -57,7 +42,7 @@ func main() {
 	osSignals := make(chan os.Signal, 1)
 	signal.Notify(osSignals, os.Interrupt, syscall.SIGTERM)
 	<-osSignals
-	slog.Debug("Graceful shutdown...")
+	slog.Info("Graceful shutdown...")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	err = server.Shutdown(ctx)

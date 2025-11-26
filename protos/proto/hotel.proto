@@ -7,31 +7,18 @@ import "google/protobuf/timestamp.proto";
 option go_package = "github.com/mihaillepenkin/MTSGolangProjectBooking/protos/gen/hotel;hotel";
 
 service Hotel {
-  rpc BlockRoomAvailability(BlockRoomRequest) returns (BlockRoomResponse);
-  rpc IsRoomAvailable(IsRoomAvailableRequest) returns (IsRoomAvailableResponse);
   rpc IsHotelier(IsHotelierRequest) returns (IsHotelierResponse);
+  rpc GetRoomInfo(RoomInfoRequest) returns (RoomInfoResponse);
 }
 
-message BlockRoomRequest {
+message RoomInfoRequest {
   string hotelName = 1; // Name of the hotel
   string roomNumber = 2; // Number of the room
-  google.protobuf.Timestamp start = 3; // Start of the blocking interval [start, end)
-  google.protobuf.Timestamp end = 4; // End of the blocking interval
 }
 
-message BlockRoomResponse {
-  string info = 1; // Some info, maybe empty
-}
-
-message IsRoomAvailableRequest {
-  string hotelName = 1; // Name of the hotel
-  string roomNumber = 2; // Number of the room
-  google.protobuf.Timestamp start = 3; // Start of the interval [start, end) to check
-  google.protobuf.Timestamp end = 4; // End of the interval to check
-}
-
-message IsRoomAvailableResponse {
-  bool isAvailable = 1;
+message RoomInfoResponse {
+  int64 amount = 1;
+  string currency = 2;
 }
 
 message IsHotelierRequest {

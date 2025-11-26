@@ -19,18 +19,16 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Hotel_BlockRoomAvailability_FullMethodName = "/hotel.Hotel/BlockRoomAvailability"
-	Hotel_IsRoomAvailable_FullMethodName       = "/hotel.Hotel/IsRoomAvailable"
-	Hotel_IsHotelier_FullMethodName            = "/hotel.Hotel/IsHotelier"
+	Hotel_IsHotelier_FullMethodName  = "/hotel.Hotel/IsHotelier"
+	Hotel_GetRoomInfo_FullMethodName = "/hotel.Hotel/GetRoomInfo"
 )
 
 // HotelClient is the client API for Hotel service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type HotelClient interface {
-	BlockRoomAvailability(ctx context.Context, in *BlockRoomRequest, opts ...grpc.CallOption) (*BlockRoomResponse, error)
-	IsRoomAvailable(ctx context.Context, in *IsRoomAvailableRequest, opts ...grpc.CallOption) (*IsRoomAvailableResponse, error)
 	IsHotelier(ctx context.Context, in *IsHotelierRequest, opts ...grpc.CallOption) (*IsHotelierResponse, error)
+	GetRoomInfo(ctx context.Context, in *RoomInfoRequest, opts ...grpc.CallOption) (*RoomInfoResponse, error)
 }
 
 type hotelClient struct {
@@ -39,26 +37,6 @@ type hotelClient struct {
 
 func NewHotelClient(cc grpc.ClientConnInterface) HotelClient {
 	return &hotelClient{cc}
-}
-
-func (c *hotelClient) BlockRoomAvailability(ctx context.Context, in *BlockRoomRequest, opts ...grpc.CallOption) (*BlockRoomResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(BlockRoomResponse)
-	err := c.cc.Invoke(ctx, Hotel_BlockRoomAvailability_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *hotelClient) IsRoomAvailable(ctx context.Context, in *IsRoomAvailableRequest, opts ...grpc.CallOption) (*IsRoomAvailableResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(IsRoomAvailableResponse)
-	err := c.cc.Invoke(ctx, Hotel_IsRoomAvailable_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *hotelClient) IsHotelier(ctx context.Context, in *IsHotelierRequest, opts ...grpc.CallOption) (*IsHotelierResponse, error) {
@@ -71,13 +49,22 @@ func (c *hotelClient) IsHotelier(ctx context.Context, in *IsHotelierRequest, opt
 	return out, nil
 }
 
+func (c *hotelClient) GetRoomInfo(ctx context.Context, in *RoomInfoRequest, opts ...grpc.CallOption) (*RoomInfoResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RoomInfoResponse)
+	err := c.cc.Invoke(ctx, Hotel_GetRoomInfo_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // HotelServer is the server API for Hotel service.
 // All implementations must embed UnimplementedHotelServer
 // for forward compatibility.
 type HotelServer interface {
-	BlockRoomAvailability(context.Context, *BlockRoomRequest) (*BlockRoomResponse, error)
-	IsRoomAvailable(context.Context, *IsRoomAvailableRequest) (*IsRoomAvailableResponse, error)
 	IsHotelier(context.Context, *IsHotelierRequest) (*IsHotelierResponse, error)
+	GetRoomInfo(context.Context, *RoomInfoRequest) (*RoomInfoResponse, error)
 	mustEmbedUnimplementedHotelServer()
 }
 
@@ -88,14 +75,11 @@ type HotelServer interface {
 // pointer dereference when methods are called.
 type UnimplementedHotelServer struct{}
 
-func (UnimplementedHotelServer) BlockRoomAvailability(context.Context, *BlockRoomRequest) (*BlockRoomResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method BlockRoomAvailability not implemented")
-}
-func (UnimplementedHotelServer) IsRoomAvailable(context.Context, *IsRoomAvailableRequest) (*IsRoomAvailableResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method IsRoomAvailable not implemented")
-}
 func (UnimplementedHotelServer) IsHotelier(context.Context, *IsHotelierRequest) (*IsHotelierResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method IsHotelier not implemented")
+}
+func (UnimplementedHotelServer) GetRoomInfo(context.Context, *RoomInfoRequest) (*RoomInfoResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetRoomInfo not implemented")
 }
 func (UnimplementedHotelServer) mustEmbedUnimplementedHotelServer() {}
 func (UnimplementedHotelServer) testEmbeddedByValue()               {}
@@ -118,42 +102,6 @@ func RegisterHotelServer(s grpc.ServiceRegistrar, srv HotelServer) {
 	s.RegisterService(&Hotel_ServiceDesc, srv)
 }
 
-func _Hotel_BlockRoomAvailability_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(BlockRoomRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(HotelServer).BlockRoomAvailability(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Hotel_BlockRoomAvailability_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HotelServer).BlockRoomAvailability(ctx, req.(*BlockRoomRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Hotel_IsRoomAvailable_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(IsRoomAvailableRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(HotelServer).IsRoomAvailable(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Hotel_IsRoomAvailable_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(HotelServer).IsRoomAvailable(ctx, req.(*IsRoomAvailableRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _Hotel_IsHotelier_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(IsHotelierRequest)
 	if err := dec(in); err != nil {
@@ -172,6 +120,24 @@ func _Hotel_IsHotelier_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Hotel_GetRoomInfo_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RoomInfoRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(HotelServer).GetRoomInfo(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Hotel_GetRoomInfo_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(HotelServer).GetRoomInfo(ctx, req.(*RoomInfoRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Hotel_ServiceDesc is the grpc.ServiceDesc for Hotel service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -180,16 +146,12 @@ var Hotel_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*HotelServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "BlockRoomAvailability",
-			Handler:    _Hotel_BlockRoomAvailability_Handler,
-		},
-		{
-			MethodName: "IsRoomAvailable",
-			Handler:    _Hotel_IsRoomAvailable_Handler,
-		},
-		{
 			MethodName: "IsHotelier",
 			Handler:    _Hotel_IsHotelier_Handler,
+		},
+		{
+			MethodName: "GetRoomInfo",
+			Handler:    _Hotel_GetRoomInfo_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

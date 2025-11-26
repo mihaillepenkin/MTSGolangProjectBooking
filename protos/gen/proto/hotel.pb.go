@@ -9,7 +9,7 @@ package hotel
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
+	_ "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -22,30 +22,28 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type BlockRoomRequest struct {
+type RoomInfoRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	HotelName     string                 `protobuf:"bytes,1,opt,name=hotelName,proto3" json:"hotelName,omitempty"`   // Name of the hotel
 	RoomNumber    string                 `protobuf:"bytes,2,opt,name=roomNumber,proto3" json:"roomNumber,omitempty"` // Number of the room
-	Start         *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=start,proto3" json:"start,omitempty"`           // Start of the blocking interval [start, end)
-	End           *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=end,proto3" json:"end,omitempty"`               // End of the blocking interval
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *BlockRoomRequest) Reset() {
-	*x = BlockRoomRequest{}
+func (x *RoomInfoRequest) Reset() {
+	*x = RoomInfoRequest{}
 	mi := &file_proto_hotel_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *BlockRoomRequest) String() string {
+func (x *RoomInfoRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*BlockRoomRequest) ProtoMessage() {}
+func (*RoomInfoRequest) ProtoMessage() {}
 
-func (x *BlockRoomRequest) ProtoReflect() protoreflect.Message {
+func (x *RoomInfoRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_hotel_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -57,60 +55,47 @@ func (x *BlockRoomRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use BlockRoomRequest.ProtoReflect.Descriptor instead.
-func (*BlockRoomRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use RoomInfoRequest.ProtoReflect.Descriptor instead.
+func (*RoomInfoRequest) Descriptor() ([]byte, []int) {
 	return file_proto_hotel_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *BlockRoomRequest) GetHotelName() string {
+func (x *RoomInfoRequest) GetHotelName() string {
 	if x != nil {
 		return x.HotelName
 	}
 	return ""
 }
 
-func (x *BlockRoomRequest) GetRoomNumber() string {
+func (x *RoomInfoRequest) GetRoomNumber() string {
 	if x != nil {
 		return x.RoomNumber
 	}
 	return ""
 }
 
-func (x *BlockRoomRequest) GetStart() *timestamppb.Timestamp {
-	if x != nil {
-		return x.Start
-	}
-	return nil
-}
-
-func (x *BlockRoomRequest) GetEnd() *timestamppb.Timestamp {
-	if x != nil {
-		return x.End
-	}
-	return nil
-}
-
-type BlockRoomResponse struct {
+type RoomInfoResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Info          string                 `protobuf:"bytes,1,opt,name=info,proto3" json:"info,omitempty"` // Some info, maybe empty
+	Amount        int64                  `protobuf:"varint,1,opt,name=amount,proto3" json:"amount,omitempty"`
+	Currency      string                 `protobuf:"bytes,2,opt,name=currency,proto3" json:"currency,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *BlockRoomResponse) Reset() {
-	*x = BlockRoomResponse{}
+func (x *RoomInfoResponse) Reset() {
+	*x = RoomInfoResponse{}
 	mi := &file_proto_hotel_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *BlockRoomResponse) String() string {
+func (x *RoomInfoResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*BlockRoomResponse) ProtoMessage() {}
+func (*RoomInfoResponse) ProtoMessage() {}
 
-func (x *BlockRoomResponse) ProtoReflect() protoreflect.Message {
+func (x *RoomInfoResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_proto_hotel_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -122,128 +107,23 @@ func (x *BlockRoomResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use BlockRoomResponse.ProtoReflect.Descriptor instead.
-func (*BlockRoomResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use RoomInfoResponse.ProtoReflect.Descriptor instead.
+func (*RoomInfoResponse) Descriptor() ([]byte, []int) {
 	return file_proto_hotel_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *BlockRoomResponse) GetInfo() string {
+func (x *RoomInfoResponse) GetAmount() int64 {
 	if x != nil {
-		return x.Info
+		return x.Amount
+	}
+	return 0
+}
+
+func (x *RoomInfoResponse) GetCurrency() string {
+	if x != nil {
+		return x.Currency
 	}
 	return ""
-}
-
-type IsRoomAvailableRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	HotelName     string                 `protobuf:"bytes,1,opt,name=hotelName,proto3" json:"hotelName,omitempty"`   // Name of the hotel
-	RoomNumber    string                 `protobuf:"bytes,2,opt,name=roomNumber,proto3" json:"roomNumber,omitempty"` // Number of the room
-	Start         *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=start,proto3" json:"start,omitempty"`           // Start of the interval [start, end) to check
-	End           *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=end,proto3" json:"end,omitempty"`               // End of the interval to check
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *IsRoomAvailableRequest) Reset() {
-	*x = IsRoomAvailableRequest{}
-	mi := &file_proto_hotel_proto_msgTypes[2]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *IsRoomAvailableRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*IsRoomAvailableRequest) ProtoMessage() {}
-
-func (x *IsRoomAvailableRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_hotel_proto_msgTypes[2]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use IsRoomAvailableRequest.ProtoReflect.Descriptor instead.
-func (*IsRoomAvailableRequest) Descriptor() ([]byte, []int) {
-	return file_proto_hotel_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *IsRoomAvailableRequest) GetHotelName() string {
-	if x != nil {
-		return x.HotelName
-	}
-	return ""
-}
-
-func (x *IsRoomAvailableRequest) GetRoomNumber() string {
-	if x != nil {
-		return x.RoomNumber
-	}
-	return ""
-}
-
-func (x *IsRoomAvailableRequest) GetStart() *timestamppb.Timestamp {
-	if x != nil {
-		return x.Start
-	}
-	return nil
-}
-
-func (x *IsRoomAvailableRequest) GetEnd() *timestamppb.Timestamp {
-	if x != nil {
-		return x.End
-	}
-	return nil
-}
-
-type IsRoomAvailableResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	IsAvailable   bool                   `protobuf:"varint,1,opt,name=isAvailable,proto3" json:"isAvailable,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *IsRoomAvailableResponse) Reset() {
-	*x = IsRoomAvailableResponse{}
-	mi := &file_proto_hotel_proto_msgTypes[3]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *IsRoomAvailableResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*IsRoomAvailableResponse) ProtoMessage() {}
-
-func (x *IsRoomAvailableResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_hotel_proto_msgTypes[3]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use IsRoomAvailableResponse.ProtoReflect.Descriptor instead.
-func (*IsRoomAvailableResponse) Descriptor() ([]byte, []int) {
-	return file_proto_hotel_proto_rawDescGZIP(), []int{3}
-}
-
-func (x *IsRoomAvailableResponse) GetIsAvailable() bool {
-	if x != nil {
-		return x.IsAvailable
-	}
-	return false
 }
 
 type IsHotelierRequest struct {
@@ -256,7 +136,7 @@ type IsHotelierRequest struct {
 
 func (x *IsHotelierRequest) Reset() {
 	*x = IsHotelierRequest{}
-	mi := &file_proto_hotel_proto_msgTypes[4]
+	mi := &file_proto_hotel_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -268,7 +148,7 @@ func (x *IsHotelierRequest) String() string {
 func (*IsHotelierRequest) ProtoMessage() {}
 
 func (x *IsHotelierRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_hotel_proto_msgTypes[4]
+	mi := &file_proto_hotel_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -281,7 +161,7 @@ func (x *IsHotelierRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IsHotelierRequest.ProtoReflect.Descriptor instead.
 func (*IsHotelierRequest) Descriptor() ([]byte, []int) {
-	return file_proto_hotel_proto_rawDescGZIP(), []int{4}
+	return file_proto_hotel_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *IsHotelierRequest) GetHotelName() string {
@@ -307,7 +187,7 @@ type IsHotelierResponse struct {
 
 func (x *IsHotelierResponse) Reset() {
 	*x = IsHotelierResponse{}
-	mi := &file_proto_hotel_proto_msgTypes[5]
+	mi := &file_proto_hotel_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -319,7 +199,7 @@ func (x *IsHotelierResponse) String() string {
 func (*IsHotelierResponse) ProtoMessage() {}
 
 func (x *IsHotelierResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_proto_hotel_proto_msgTypes[5]
+	mi := &file_proto_hotel_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -332,7 +212,7 @@ func (x *IsHotelierResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IsHotelierResponse.ProtoReflect.Descriptor instead.
 func (*IsHotelierResponse) Descriptor() ([]byte, []int) {
-	return file_proto_hotel_proto_rawDescGZIP(), []int{5}
+	return file_proto_hotel_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *IsHotelierResponse) GetIsHotelier() bool {
@@ -346,37 +226,26 @@ var File_proto_hotel_proto protoreflect.FileDescriptor
 
 const file_proto_hotel_proto_rawDesc = "" +
 	"\n" +
-	"\x11proto/hotel.proto\x12\x05hotel\x1a\x1fgoogle/protobuf/timestamp.proto\"\xb0\x01\n" +
-	"\x10BlockRoomRequest\x12\x1c\n" +
+	"\x11proto/hotel.proto\x12\x05hotel\x1a\x1fgoogle/protobuf/timestamp.proto\"O\n" +
+	"\x0fRoomInfoRequest\x12\x1c\n" +
 	"\thotelName\x18\x01 \x01(\tR\thotelName\x12\x1e\n" +
 	"\n" +
 	"roomNumber\x18\x02 \x01(\tR\n" +
-	"roomNumber\x120\n" +
-	"\x05start\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x05start\x12,\n" +
-	"\x03end\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\x03end\"'\n" +
-	"\x11BlockRoomResponse\x12\x12\n" +
-	"\x04info\x18\x01 \x01(\tR\x04info\"\xb6\x01\n" +
-	"\x16IsRoomAvailableRequest\x12\x1c\n" +
-	"\thotelName\x18\x01 \x01(\tR\thotelName\x12\x1e\n" +
-	"\n" +
-	"roomNumber\x18\x02 \x01(\tR\n" +
-	"roomNumber\x120\n" +
-	"\x05start\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x05start\x12,\n" +
-	"\x03end\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\x03end\";\n" +
-	"\x17IsRoomAvailableResponse\x12 \n" +
-	"\visAvailable\x18\x01 \x01(\bR\visAvailable\"I\n" +
+	"roomNumber\"F\n" +
+	"\x10RoomInfoResponse\x12\x16\n" +
+	"\x06amount\x18\x01 \x01(\x03R\x06amount\x12\x1a\n" +
+	"\bcurrency\x18\x02 \x01(\tR\bcurrency\"I\n" +
 	"\x11IsHotelierRequest\x12\x1c\n" +
 	"\thotelName\x18\x01 \x01(\tR\thotelName\x12\x16\n" +
 	"\x06userID\x18\x02 \x01(\tR\x06userID\"4\n" +
 	"\x12IsHotelierResponse\x12\x1e\n" +
 	"\n" +
 	"isHotelier\x18\x01 \x01(\bR\n" +
-	"isHotelier2\xe8\x01\n" +
-	"\x05Hotel\x12J\n" +
-	"\x15BlockRoomAvailability\x12\x17.hotel.BlockRoomRequest\x1a\x18.hotel.BlockRoomResponse\x12P\n" +
-	"\x0fIsRoomAvailable\x12\x1d.hotel.IsRoomAvailableRequest\x1a\x1e.hotel.IsRoomAvailableResponse\x12A\n" +
+	"isHotelier2\x8a\x01\n" +
+	"\x05Hotel\x12A\n" +
 	"\n" +
-	"IsHotelier\x12\x18.hotel.IsHotelierRequest\x1a\x19.hotel.IsHotelierResponseBJZHgithub.com/mihaillepenkin/MTSGolangProjectBooking/protos/gen/hotel;hotelb\x06proto3"
+	"IsHotelier\x12\x18.hotel.IsHotelierRequest\x1a\x19.hotel.IsHotelierResponse\x12>\n" +
+	"\vGetRoomInfo\x12\x16.hotel.RoomInfoRequest\x1a\x17.hotel.RoomInfoResponseBJZHgithub.com/mihaillepenkin/MTSGolangProjectBooking/protos/gen/hotel;hotelb\x06proto3"
 
 var (
 	file_proto_hotel_proto_rawDescOnce sync.Once
@@ -390,32 +259,23 @@ func file_proto_hotel_proto_rawDescGZIP() []byte {
 	return file_proto_hotel_proto_rawDescData
 }
 
-var file_proto_hotel_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_proto_hotel_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_proto_hotel_proto_goTypes = []any{
-	(*BlockRoomRequest)(nil),        // 0: hotel.BlockRoomRequest
-	(*BlockRoomResponse)(nil),       // 1: hotel.BlockRoomResponse
-	(*IsRoomAvailableRequest)(nil),  // 2: hotel.IsRoomAvailableRequest
-	(*IsRoomAvailableResponse)(nil), // 3: hotel.IsRoomAvailableResponse
-	(*IsHotelierRequest)(nil),       // 4: hotel.IsHotelierRequest
-	(*IsHotelierResponse)(nil),      // 5: hotel.IsHotelierResponse
-	(*timestamppb.Timestamp)(nil),   // 6: google.protobuf.Timestamp
+	(*RoomInfoRequest)(nil),    // 0: hotel.RoomInfoRequest
+	(*RoomInfoResponse)(nil),   // 1: hotel.RoomInfoResponse
+	(*IsHotelierRequest)(nil),  // 2: hotel.IsHotelierRequest
+	(*IsHotelierResponse)(nil), // 3: hotel.IsHotelierResponse
 }
 var file_proto_hotel_proto_depIdxs = []int32{
-	6, // 0: hotel.BlockRoomRequest.start:type_name -> google.protobuf.Timestamp
-	6, // 1: hotel.BlockRoomRequest.end:type_name -> google.protobuf.Timestamp
-	6, // 2: hotel.IsRoomAvailableRequest.start:type_name -> google.protobuf.Timestamp
-	6, // 3: hotel.IsRoomAvailableRequest.end:type_name -> google.protobuf.Timestamp
-	0, // 4: hotel.Hotel.BlockRoomAvailability:input_type -> hotel.BlockRoomRequest
-	2, // 5: hotel.Hotel.IsRoomAvailable:input_type -> hotel.IsRoomAvailableRequest
-	4, // 6: hotel.Hotel.IsHotelier:input_type -> hotel.IsHotelierRequest
-	1, // 7: hotel.Hotel.BlockRoomAvailability:output_type -> hotel.BlockRoomResponse
-	3, // 8: hotel.Hotel.IsRoomAvailable:output_type -> hotel.IsRoomAvailableResponse
-	5, // 9: hotel.Hotel.IsHotelier:output_type -> hotel.IsHotelierResponse
-	7, // [7:10] is the sub-list for method output_type
-	4, // [4:7] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	2, // 0: hotel.Hotel.IsHotelier:input_type -> hotel.IsHotelierRequest
+	0, // 1: hotel.Hotel.GetRoomInfo:input_type -> hotel.RoomInfoRequest
+	3, // 2: hotel.Hotel.IsHotelier:output_type -> hotel.IsHotelierResponse
+	1, // 3: hotel.Hotel.GetRoomInfo:output_type -> hotel.RoomInfoResponse
+	2, // [2:4] is the sub-list for method output_type
+	0, // [0:2] is the sub-list for method input_type
+	0, // [0:0] is the sub-list for extension type_name
+	0, // [0:0] is the sub-list for extension extendee
+	0, // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_proto_hotel_proto_init() }
@@ -429,7 +289,7 @@ func file_proto_hotel_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_proto_hotel_proto_rawDesc), len(file_proto_hotel_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

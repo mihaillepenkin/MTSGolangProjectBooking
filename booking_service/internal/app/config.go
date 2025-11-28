@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/infrastructure/postgresconfig"
+	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/infrastructure/config/grpcconfig"
+	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/infrastructure/config/postgresconfig"
 	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
 	HTTPConfig     HTTPConfig                    `yaml:"http"`
 	PostgresConfig postgresconfig.PostgresConfig `yaml:"postgres"`
+	GRPCConfig     grpcconfig.GRPCConfig         `yaml:"grpc"`
 }
 
 func LoadConfig(path string) (*Config, error) {

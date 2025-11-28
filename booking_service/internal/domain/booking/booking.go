@@ -3,8 +3,8 @@ package booking
 import (
 	"time"
 
+	error2 "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/booking/error"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/booking/object"
-	error2 "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/error"
 )
 
 type BookingStatus string

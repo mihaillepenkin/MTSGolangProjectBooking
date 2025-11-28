@@ -1,4 +1,6 @@
 secret_key: "secret"
+grpc:
+  address: ":9090"
 http:
   address: ":8080"
   read_timeout: "10s"

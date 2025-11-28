@@ -13,4 +13,5 @@ type Repository interface {
 	GetByBookingInfo(ctx context.Context, bookingInfo *object.BookingInfo) (*Booking, error)
 	GetByHotel(ctx context.Context, hotelName string) ([]*Booking, error)
 	GetByUser(ctx context.Context, userID string) ([]*Booking, error)
+	GetDurationsByRoom(ctx context.Context, hotelName string, roomNumber string) ([][]time.Time, error)
 }

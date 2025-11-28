@@ -1,9 +1,8 @@
 package object
 
 import (
-	error2 "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/error"
-
 	"github.com/google/uuid"
+	error2 "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/booking/error"
 )
 
 type BookingID struct {

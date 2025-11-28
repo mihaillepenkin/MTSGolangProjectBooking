@@ -9,8 +9,8 @@ import (
 
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/application/usecase/transactionmanager"
 	bookingdomain "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/booking"
+	error2 "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/booking/error"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/booking/object"
-	error2 "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/error"
 )
 
 type BookingRepository struct {
@@ -72,6 +72,60 @@ ON CONFLICT (user_id, hotel_name, room_number, check_in, check_out) DO UPDATE SE
 	}
 
 	return nil
+}
+
+func (b *BookingRepository) GetDurationsByRoom(ctx context.Context, hotelName string, roomNumber string) ([][]time.Time, error) {
+	var err error
+	tx, err := b.db.BeginTx(ctx, nil)
+
+	defer func() {
+		if err != nil {
+			if err2 := tx.Rollback(); err2 != nil {
+				slog.Error("Error rollback", "error", err2)
+			}
+		}
+	}()
+
+	if err != nil {
+		slog.Error("Error begin transaction", "error", err)
+		return nil, err
+	}
+
+	query := `SELECT check_in, check_out
+    FROM bookings
+    WHERE hotel_name = $1 AND room_number = $2 and status ='paid'`
+
+	rows, err := tx.QueryContext(ctx, query, hotelName, roomNumber)
+	if err != nil {
+		slog.Error("Error querying bookings", "error", err)
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	durations := make([][]time.Time, 0)
+	for rows.Next() {
+		var checkIn, checkOut time.Time
+		if err = rows.Scan(&checkIn, &checkOut); err != nil {
+			slog.Error("Error scanning bookings", "error", err)
+			return nil, err
+		}
+
+		durations = append(durations, []time.Time{checkIn, checkOut})
+	}
+
+	if err = rows.Err(); err != nil {
+		slog.Error("Error scanning bookings", "error", err)
+		return nil, err
+	}
+
+	if commitErr := tx.Commit(); commitErr != nil {
+		_ = tx.Rollback()
+		slog.Error("Error commit transaction", "error", commitErr)
+		return nil, commitErr
+	}
+
+	return durations, nil
 }
 
 func (b *BookingRepository) IsIntersected(ctx context.Context, hotelName string, hotelRoom string, checkIn time.Time, checkOut time.Time) (bool, error) {

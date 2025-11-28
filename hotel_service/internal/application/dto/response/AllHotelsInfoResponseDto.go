@@ -1,13 +1,17 @@
 package response
 
-import "hotel_service/internal/application/dto/request"
+type Room struct {
+	Id     int64 `json:"id"`
+	Number int   `json:"number"`
+	Price  int   `json:"price"`
+}
 
 type Hotel struct {
-	Id       int64          `json:"id"`
-	Name     string         `json:"name"`
-	Location string         `json:"location"`
-	OwnerId  int64          `json:"ownerId"`
-	Rooms    []request.Room `json:"rooms"`
+	Id       int64  `json:"id"`
+	Name     string `json:"name"`
+	Location string `json:"location"`
+	OwnerId  int64  `json:"ownerId"`
+	Rooms    []Room `json:"rooms"`
 }
 
 type AllHotelsInfoResponseDto struct {

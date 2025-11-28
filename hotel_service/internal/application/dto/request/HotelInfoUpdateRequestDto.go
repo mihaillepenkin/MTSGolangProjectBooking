@@ -1,9 +1,9 @@
 package request
 
 type RoomUpd struct {
-	Id     int64
-	Number int `json:"number"`
-	Price  int `json:"price"`
+	Id     int64 `json:"id"`
+	Number int   `json:"number"`
+	Price  int   `json:"price"`
 }
 
 type HotelInfoUpdateRequestDto struct {

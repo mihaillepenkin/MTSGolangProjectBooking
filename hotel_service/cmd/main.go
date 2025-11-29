@@ -21,15 +21,17 @@ func main() {
 	if err != nil {
 		slog.Error(err.Error())
 	}
+	slog.Info("Successfully connected to database")
 
 	hotelHandler := api.HotelHandler{}
 	hotelHandler.Initialize(db)
 
 	mux := api.CreateRouting(&hotelHandler)
+	handler := api.CORSMiddleware(api.AuthMiddleware(mux))
 
 	server := &http.Server{
 		Addr:    ":8082",
-		Handler: mux,
+		Handler: handler,
 	}
 	go func() {
 		err := server.ListenAndServe()

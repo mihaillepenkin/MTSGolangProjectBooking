@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package hotel;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/mihaillepenkin/MTSGolangProjectBooking/protos/gen/hotel;hotel";
+
+service Hotel {
+  rpc IsHotelier(IsHotelierRequest) returns (IsHotelierResponse);
+  rpc GetRoomInfo(RoomInfoRequest) returns (RoomInfoResponse);
+}
+
+message RoomInfoRequest {
+  string hotelName = 1; // Name of the hotel
+  string roomNumber = 2; // Number of the room
+}
+
+message RoomInfoResponse {
+  int64 amount = 1;
+  string currency = 2;
+}
+
+message IsHotelierRequest {
+  string hotelName = 1; // Name of the hotel
+  string userID = 2; // ID to check for hotelier
+}
+
+message IsHotelierResponse {
+  bool isHotelier = 1;
+}

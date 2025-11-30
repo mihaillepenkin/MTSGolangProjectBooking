@@ -1,0 +1,1 @@
+ALTER TABLE bookings DROP IF EXISTS CONSTRAINT no_overlapping_bookings;

@@ -1,0 +1,11 @@
+secret_key: "secret"
+http:
+  address: ":8080"
+  read_timeout: "10s"
+  write_timeout: "10s"
+postgres:
+  dsn: "postgresql://postgres:123@localhost:5432/booking?sslmode=disable"
+  max_connections: 25
+  max_idle_connections: 10
+  conn_max_lifetime: "30m"
+  conn_max_idle_time: "5m"

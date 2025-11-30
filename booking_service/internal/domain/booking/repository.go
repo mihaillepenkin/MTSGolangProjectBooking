@@ -1,0 +1,16 @@
+package booking
+
+import (
+	"context"
+	"time"
+
+	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/booking/object"
+)
+
+type Repository interface {
+	Save(ctx context.Context, booking *Booking) error
+	IsIntersected(ctx context.Context, hotelName string, hotelRoom string, checkIn time.Time, checkOut time.Time) (bool, error)
+	GetByBookingInfo(ctx context.Context, bookingInfo *object.BookingInfo) (*Booking, error)
+	GetByHotel(ctx context.Context, hotelName string) ([]*Booking, error)
+	GetByUser(ctx context.Context, userID string) ([]*Booking, error)
+}

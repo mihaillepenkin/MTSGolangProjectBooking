@@ -195,7 +195,7 @@ func (b *BookingRepository) GetByBookingInfo(ctx context.Context, bookingInfo *o
 
 	var id string
 	booking := &bookingdomain.Booking{}
-	execErr := tx.QueryRowContext(ctx, query, bookingInfo.UserID, bookingInfo.HotelName, bookingInfo.RoomNumber, bookingInfo.CheckIn, bookingInfo.CheckOut).Scan(&id, &booking.UserID, &booking.HotelName, &booking.RoomNumber, &booking.TotalPrice,
+	execErr := tx.QueryRowContext(ctx, query, bookingInfo.User.ID, bookingInfo.HotelName, bookingInfo.RoomNumber, bookingInfo.CheckIn, bookingInfo.CheckOut).Scan(&id, &booking.UserID, &booking.HotelName, &booking.RoomNumber, &booking.TotalPrice,
 		&booking.Currency, &booking.CheckIn, &booking.CheckOut, &booking.Status)
 
 	if errors.Is(execErr, sql.ErrNoRows) {

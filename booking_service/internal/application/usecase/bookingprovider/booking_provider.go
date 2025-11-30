@@ -8,6 +8,7 @@ import (
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/booking"
 	error2 "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/booking/error"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/hotel"
+	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/user"
 )
 
 type BookingProvider struct {
@@ -29,8 +30,8 @@ func (b *BookingProvider) GetOccupiedRoomDurations(ctx context.Context, hotelNam
 	return durations, nil
 }
 
-func (b *BookingProvider) GetBookingsByUser(ctx context.Context, userID string) ([]*booking.Booking, error) {
-	bookings, err := b.bookingRepo.GetByUser(ctx, userID)
+func (b *BookingProvider) GetBookingsByUser(ctx context.Context, user *user.User) ([]*booking.Booking, error) {
+	bookings, err := b.bookingRepo.GetByUser(ctx, user.ID)
 
 	if err != nil {
 		slog.Error("Error while getting bookings by user: ", "error", err)
@@ -40,15 +41,15 @@ func (b *BookingProvider) GetBookingsByUser(ctx context.Context, userID string) 
 	return bookings, nil
 }
 
-func (b *BookingProvider) GetBookingsByHotelier(ctx context.Context, hotelierID string, hotelName string) ([]*booking.Booking, error) {
-	ok, err := b.hotelRepo.IsHotelier(ctx, hotelierID, hotelName)
+func (b *BookingProvider) GetBookingsByHotelier(ctx context.Context, user *user.User, hotelName string) ([]*booking.Booking, error) {
+	ok, err := b.hotelRepo.IsHotelier(ctx, user.ID, hotelName)
 	if err != nil {
 		slog.Error("Error while checking hotelier: ", "error", err)
 		return nil, err
 	}
 
 	if !ok {
-		slog.Debug("Hotelier is not valid", "hotelierID", hotelierID, "hotelName", hotelName)
+		slog.Debug("Hotelier is not valid", "hotelierID", user.ID, "hotelName", hotelName)
 		return nil, error2.ErrHotelierIsNotValid
 	}
 

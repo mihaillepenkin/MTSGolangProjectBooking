@@ -43,7 +43,7 @@ func (b *BookingProvider) BookRoom(ctx context.Context, bookingInfo *object.Book
 		days := int64(bookingInfo.CheckOut.Sub(bookingInfo.CheckIn).Hours() / 24)
 
 		booking := &bookingdomain.Booking{
-			UserID:     bookingInfo.UserID,
+			UserID:     bookingInfo.User.ID,
 			HotelName:  bookingInfo.HotelName,
 			RoomNumber: bookingInfo.RoomNumber,
 			TotalPrice: float64(days * roomInfo.Amount),

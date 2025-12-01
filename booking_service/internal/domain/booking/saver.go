@@ -8,5 +8,6 @@ import (
 
 type Saver interface {
 	BookRoom(ctx context.Context, bookingInfo *object.BookingInfo) (string, error)
+	DeleteBooking(ctx context.Context, bookingInfo *object.BookingInfo) error
 	ConfirmBooking(ctx context.Context, bookingInfo *object.BookingInfo) error
 }

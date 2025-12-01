@@ -74,6 +74,56 @@ ON CONFLICT (user_id, hotel_name, room_number, check_in, check_out) DO UPDATE SE
 	return nil
 }
 
+func (b *BookingRepository) Delete(ctx context.Context, booking *bookingdomain.Booking) error {
+	var err error
+	tx, ok := transactionmanager.GetTxFromCtx(ctx)
+	if !ok {
+		tx, err = b.db.BeginTx(ctx, nil)
+		if err != nil {
+			slog.Error("Error begin transaction", "error", err)
+			return err
+		}
+		defer func() {
+			if err != nil {
+				if err2 := tx.Rollback(); err2 != nil {
+					slog.Error("Error rollback", "error", err2)
+				}
+			}
+		}()
+	}
+
+	query := `DELETE FROM bookings WHERE user_id = $1 AND hotel_name = $2 AND room_number = $3
+              AND check_in = $4 AND check_out = $5`
+	result, execErr := tx.ExecContext(ctx, query, booking.UserID, booking.HotelName, booking.RoomNumber, booking.CheckIn, booking.CheckOut)
+
+	if execErr != nil {
+		slog.Error("Error deleting booking", "error", execErr)
+		err = execErr
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+
+	if err != nil {
+		slog.Error("Error getting rows affected", "error", err)
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return error2.ErrBookingIsNotFound
+	}
+
+	if !ok {
+		if commitErr := tx.Commit(); commitErr != nil {
+			slog.Error("Error commit transaction", "error", commitErr)
+			_ = tx.Rollback()
+			return commitErr
+		}
+	}
+
+	return nil
+}
+
 func (b *BookingRepository) GetDurationsByRoom(ctx context.Context, hotelName string, roomNumber string) ([][]time.Time, error) {
 	var err error
 	tx, err := b.db.BeginTx(ctx, nil)

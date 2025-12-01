@@ -9,15 +9,18 @@ import (
 	error2 "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/booking/error"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/booking/object"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/hotel"
+	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/payment"
 )
 
-type BookingProvider struct {
-	bookingRepo bookingdomain.Repository
-	txManager   transactionmanager.TransactionManager[string]
-	hotelRepo   hotel.Repository
+type BookingSaver struct {
+	bookingRepo            bookingdomain.Repository
+	txManager              transactionmanager.TransactionManager[string]
+	hotelRepo              hotel.Repository
+	paymentSender          payment.PaymentSender
+	webhookHandlerEndpoint string
 }
 
-func (b *BookingProvider) BookRoom(ctx context.Context, bookingInfo *object.BookingInfo) (string, error) {
+func (b *BookingSaver) BookRoom(ctx context.Context, bookingInfo *object.BookingInfo) (string, error) {
 
 	if bookingInfo.CheckOut.Before(bookingInfo.CheckIn) {
 		return "", error2.ErrTimeDurationIsNotValid
@@ -53,7 +56,12 @@ func (b *BookingProvider) BookRoom(ctx context.Context, bookingInfo *object.Book
 			Status:     bookingdomain.BookingStatusUnpaid,
 		}
 
-		//TODO need to begin transaction from payment system and return url to user
+		paymentInfo := payment.PaymentInfo{BookingInfo: *bookingInfo, Price: booking.TotalPrice, Currency: roomInfo.Currency, URL: b.webhookHandlerEndpoint}
+		err = b.paymentSender.SendPayment(ctx, paymentInfo)
+		if err != nil {
+			slog.Error("Error while sending payment", "error", err)
+			return "", err
+		}
 
 		err = b.bookingRepo.Save(ctx, booking)
 		if err != nil {
@@ -65,7 +73,26 @@ func (b *BookingProvider) BookRoom(ctx context.Context, bookingInfo *object.Book
 	})
 }
 
-func (b *BookingProvider) ConfirmBooking(ctx context.Context, bookingInfo *object.BookingInfo) error {
+func (b *BookingSaver) DeleteBooking(ctx context.Context, bookingInfo *object.BookingInfo) error {
+	_, err := b.txManager.InTransaction(ctx, func(ctx context.Context) (string, error) {
+		booking, err := b.bookingRepo.GetByBookingInfo(ctx, bookingInfo)
+		if err != nil {
+			slog.Error("Error while getting booking", "error", err)
+			return "", err
+		}
+
+		err = b.bookingRepo.Delete(ctx, booking)
+		if err != nil {
+			slog.Error("Error while deleting booking", "error", err)
+			return "", err
+		}
+
+		return "", nil
+	})
+	return err
+}
+
+func (b *BookingSaver) ConfirmBooking(ctx context.Context, bookingInfo *object.BookingInfo) error {
 	_, err := b.txManager.InTransaction(ctx, func(ctx context.Context) (string, error) {
 		booking, err := b.bookingRepo.GetByBookingInfo(ctx, bookingInfo)
 		if err != nil {

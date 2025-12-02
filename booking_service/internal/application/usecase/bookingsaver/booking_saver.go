@@ -57,7 +57,7 @@ func (b *BookingSaver) BookRoom(ctx context.Context, bookingInfo *object.Booking
 		}
 
 		paymentInfo := payment.PaymentInfo{BookingInfo: *bookingInfo, Price: booking.TotalPrice, Currency: roomInfo.Currency, URL: b.webhookHandlerEndpoint}
-		err = b.paymentSender.SendPayment(ctx, paymentInfo)
+		url, err := b.paymentSender.SendPayment(ctx, paymentInfo)
 		if err != nil {
 			slog.Error("Error while sending payment", "error", err)
 			return "", err
@@ -69,7 +69,7 @@ func (b *BookingSaver) BookRoom(ctx context.Context, bookingInfo *object.Booking
 			return "", err
 		}
 
-		return "url", nil
+		return url, nil
 	})
 }
 

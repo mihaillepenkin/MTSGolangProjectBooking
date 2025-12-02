@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"log/slog"
 	"net/http"
 
@@ -19,24 +20,41 @@ func NewPaymentSender(client *http.Client, baseURL string) *PaymentSenderImpl {
 	return &PaymentSenderImpl{client: client, baseURL: baseURL}
 }
 
-func (p *PaymentSenderImpl) SendPayment(ctx context.Context, info payment.PaymentInfo) error {
+func (p *PaymentSenderImpl) SendPayment(ctx context.Context, info payment.PaymentInfo) (string, error) {
 	jsonData, err := json.Marshal(info)
 	if err != nil {
 		slog.Error("Error marshalling payment info", "error", err)
-		return err
+		return "", err
 	}
 
 	req, err := http.NewRequestWithContext(ctx, "POST", p.baseURL, bytes.NewBuffer(jsonData))
 	if err != nil {
 		slog.Error("Error creating payment request", "error", err)
-		return err
+		return "", err
 	}
 
-	_, err = p.client.Do(req)
+	resp, err := p.client.Do(req)
 	if err != nil {
 		slog.Error("Error executing payment request", "error", err)
-		return err
+		return "", err
 	}
 
-	return nil
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		slog.Error("Error reading response body", "error", err)
+		return "", err
+	}
+
+	var data struct {
+		URL string `json:"url"`
+	}
+
+	if err = json.Unmarshal(body, &data); err != nil {
+		slog.Error("Error unmarshalling response body", "error", err)
+		return "", err
+	}
+
+	defer resp.Body.Close()
+
+	return data.URL, nil
 }

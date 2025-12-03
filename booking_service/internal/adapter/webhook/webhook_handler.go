@@ -12,18 +12,19 @@ import (
 
 type WebhookHandler struct {
 	bookingService booking.Saver
+	logger         *slog.Logger
 }
 
 func NewWebhookHandler(bookingService booking.Saver) *WebhookHandler {
-	return &WebhookHandler{bookingService: bookingService}
+	return &WebhookHandler{bookingService: bookingService, logger: slog.Default().With("component", "webhook_handler")}
 }
 
 func (wh *WebhookHandler) ServeWebhook(w http.ResponseWriter, r *http.Request) {
-	slog.Debug("WebhookHandler.ServeWebhook called")
+	wh.logger.Debug("WebhookHandler.ServeWebhook called")
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		slog.Error("WebhookHandler.ServeWebhook failed to read body", "error", err)
+		wh.logger.Error("WebhookHandler.ServeWebhook failed to read body", "error", err)
 		http.Error(w, "failed to serve", http.StatusInternalServerError)
 		return
 	}
@@ -32,7 +33,7 @@ func (wh *WebhookHandler) ServeWebhook(w http.ResponseWriter, r *http.Request) {
 	var webhookRequest request.WebhookRequest
 	err = json.Unmarshal(body, &webhookRequest)
 	if err != nil {
-		slog.Error("WebhookHandler.ServeWebhook failed to unmarshal body", "error", err)
+		wh.logger.Error("WebhookHandler.ServeWebhook failed to unmarshal body", "error", err)
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
@@ -40,14 +41,14 @@ func (wh *WebhookHandler) ServeWebhook(w http.ResponseWriter, r *http.Request) {
 	if webhookRequest.Status == "Success" {
 		err = wh.bookingService.ConfirmBooking(r.Context(), &webhookRequest.Info)
 		if err != nil {
-			slog.Error("WebhookHandler.ServeWebhook failed to confirm booking", "error", err)
+			wh.logger.Error("WebhookHandler.ServeWebhook failed to confirm booking", "error", err)
 			http.Error(w, "failed to serve", http.StatusInternalServerError)
 			return
 		}
 	} else if webhookRequest.Status == "Failed" {
 		err = wh.bookingService.DeleteBooking(r.Context(), &webhookRequest.Info)
 		if err != nil {
-			slog.Error("WebhookHandler.ServeWebhook failed to delete booking", "error", err)
+			wh.logger.Error("WebhookHandler.ServeWebhook failed to delete booking", "error", err)
 			http.Error(w, "failed to serve", http.StatusInternalServerError)
 		}
 	}
@@ -56,7 +57,7 @@ func (wh *WebhookHandler) ServeWebhook(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/plain")
 	_, err = w.Write([]byte("Successfully served webhook"))
 	if err != nil {
-		slog.Error("WebhookHandler.ServeWebhook failed to write response", "error", err)
+		wh.logger.Error("WebhookHandler.ServeWebhook failed to write response", "error", err)
 		return
 	}
 }

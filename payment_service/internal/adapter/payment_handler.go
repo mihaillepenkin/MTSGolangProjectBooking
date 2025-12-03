@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/payment_service/internal/adapter/httpconfig"
 	response2 "github.com/mihaillepenkin/MTSGolangProjectBooking/payment_service/internal/adapter/response"
 	paymentdomain "github.com/mihaillepenkin/MTSGolangProjectBooking/payment_service/internal/domain/payment"
@@ -56,7 +57,7 @@ func (h *PaymentHandler) CreatePayment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := response2.CreatePaymentResponse{URL: h.config.Host + ":" + h.config.Port + ProcessEndpoint + "?token=" + token}
+	response := response2.CreatePaymentResponse{URL: h.config.Host + ":" + h.config.Port + ProcessEndpoint + "?token=" + token, PaymentID: uuid.New().String()}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)

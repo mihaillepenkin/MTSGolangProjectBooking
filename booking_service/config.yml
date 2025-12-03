@@ -1,4 +1,5 @@
-secret_key: "secret"
+jwt:
+  secret_key: "secret"
 grpc:
   address: ":9090"
 http:
@@ -8,8 +9,9 @@ http:
   read_timeout: "10s"
   write_timeout: "10s"
   allowed_origins: ["http://localhost:8083"]
+  webhook_handler_endpoint: "/api/webhook-callback"
 payment_system:
-  endpoint: "localhost:8083/api/payment"
+  create_endpoint: "localhost:8083/api/payment"
 postgres:
   dsn: "postgresql://postgres:123@localhost:5432/booking?sslmode=disable"
   max_connections: 25

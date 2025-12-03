@@ -35,4 +35,5 @@ type Booking struct {
 	CheckIn    time.Time
 	CheckOut   time.Time
 	Status     BookingStatus
+	PaymentID  string
 }

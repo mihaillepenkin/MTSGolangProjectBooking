@@ -14,10 +14,11 @@ import (
 
 type HotelClient struct {
 	client grpchotel.HotelClient
+	logger *slog.Logger
 }
 
 func NewHotelClient(conn *grpc.ClientConn) *HotelClient {
-	return &HotelClient{client: grpchotel.NewHotelClient(conn)}
+	return &HotelClient{client: grpchotel.NewHotelClient(conn), logger: slog.Default().With("component", "hotel_client")}
 }
 
 func (h *HotelClient) IsHotelier(ctx context.Context, userID string, hotelName string) (bool, error) {
@@ -27,16 +28,16 @@ func (h *HotelClient) IsHotelier(ctx context.Context, userID string, hotelName s
 	if err != nil {
 		st, ok := status.FromError(err)
 		if !ok {
-			slog.Error("Failed to call client.IsHotelier()", "error", err)
+			h.logger.Error("Failed to call client.IsHotelier()", "error", err)
 			return false, err
 		}
 
 		switch st.Code() {
 		case codes.InvalidArgument:
-			slog.Error("Invalid argument", "error", st.Message())
+			h.logger.Error("Invalid argument", "error", st.Message())
 			return false, error2.ErrHotelierInvalidArgument
 		default:
-			slog.Error("Unknown error", "error", st.Message())
+			h.logger.Error("Unknown error", "error", st.Message())
 			return false, err
 		}
 	}
@@ -51,19 +52,19 @@ func (h *HotelClient) GetRoomInfo(ctx context.Context, hotelName string, roomNum
 	if err != nil {
 		st, ok := status.FromError(err)
 		if !ok {
-			slog.Error("Failed to call client.GetRoomInfo()", "error", err)
+			h.logger.Error("Failed to call client.GetRoomInfo()", "error", err)
 			return nil, err
 		}
 
 		switch st.Code() {
 		case codes.InvalidArgument:
-			slog.Error("Invalid argument", "error", st.Message())
+			h.logger.Error("Invalid argument", "error", st.Message())
 			return nil, error2.ErrHotelRoomInvalidArgument
 		case codes.NotFound:
-			slog.Error("Room is not found", "error", st.Message())
+			h.logger.Error("Room is not found", "error", st.Message())
 			return nil, error2.ErrHotelRoomIsNotFound
 		default:
-			slog.Error("Unknown error", "error", st.Message())
+			h.logger.Error("Unknown error", "error", st.Message())
 			return nil, err
 		}
 	}

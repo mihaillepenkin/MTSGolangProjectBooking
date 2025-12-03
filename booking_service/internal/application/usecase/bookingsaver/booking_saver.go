@@ -13,11 +13,16 @@ import (
 )
 
 type BookingSaver struct {
-	bookingRepo            bookingdomain.Repository
-	txManager              transactionmanager.TransactionManager[string]
-	hotelRepo              hotel.Repository
-	paymentSender          payment.PaymentSender
-	webhookHandlerEndpoint string
+	bookingRepo       bookingdomain.Repository
+	txManager         transactionmanager.TransactionManager[string]
+	hotelRepo         hotel.Repository
+	paymentSender     payment.PaymentSender
+	webhookHandlerURL string
+	logger            *slog.Logger
+}
+
+func NewBookingSaver(bookingRepo bookingdomain.Repository, txManager transactionmanager.TransactionManager[string], hotelRepo hotel.Repository, paymentSender payment.PaymentSender, webhookHandlerURL string) *BookingSaver {
+	return &BookingSaver{bookingRepo: bookingRepo, txManager: txManager, hotelRepo: hotelRepo, paymentSender: paymentSender, webhookHandlerURL: webhookHandlerURL, logger: slog.Default().With("component", "booking_saver")}
 }
 
 func (b *BookingSaver) BookRoom(ctx context.Context, bookingInfo *object.BookingInfo) (string, error) {
@@ -29,7 +34,7 @@ func (b *BookingSaver) BookRoom(ctx context.Context, bookingInfo *object.Booking
 	return b.txManager.InTransaction(ctx, func(ctx context.Context) (string, error) {
 		isIntersected, err := b.bookingRepo.IsIntersected(ctx, bookingInfo.HotelName, bookingInfo.RoomNumber, bookingInfo.CheckIn, bookingInfo.CheckOut)
 		if err != nil {
-			slog.Error("Error while checking intersected booking", "error", err)
+			b.logger.Error("Error while checking intersected booking", "error", err)
 			return "", err
 		}
 
@@ -39,7 +44,7 @@ func (b *BookingSaver) BookRoom(ctx context.Context, bookingInfo *object.Booking
 
 		roomInfo, err := b.hotelRepo.GetRoomInfo(ctx, bookingInfo.HotelName, bookingInfo.RoomNumber)
 		if err != nil {
-			slog.Error("Error while getting room info", "error", err)
+			b.logger.Error("Error while getting room info", "error", err)
 			return "", err
 		}
 
@@ -56,20 +61,22 @@ func (b *BookingSaver) BookRoom(ctx context.Context, bookingInfo *object.Booking
 			Status:     bookingdomain.BookingStatusUnpaid,
 		}
 
-		paymentInfo := payment.PaymentInfo{BookingInfo: *bookingInfo, Price: booking.TotalPrice, Currency: roomInfo.Currency, URL: b.webhookHandlerEndpoint}
-		url, err := b.paymentSender.SendPayment(ctx, paymentInfo)
+		paymentInfo := &payment.PaymentInfo{BookingInfo: *bookingInfo, Price: booking.TotalPrice, Currency: roomInfo.Currency, URL: b.webhookHandlerURL}
+		response, err := b.paymentSender.SendPayment(ctx, paymentInfo)
 		if err != nil {
-			slog.Error("Error while sending payment", "error", err)
+			b.logger.Error("Error while sending payment", "error", err)
 			return "", err
 		}
+
+		booking.PaymentID = response.PaymentID
 
 		err = b.bookingRepo.Save(ctx, booking)
 		if err != nil {
-			slog.Error("Error while saving booking", "error", err)
+			b.logger.Error("Error while saving booking", "error", err)
 			return "", err
 		}
 
-		return url, nil
+		return response.URL, nil
 	})
 }
 
@@ -77,13 +84,13 @@ func (b *BookingSaver) DeleteBooking(ctx context.Context, bookingInfo *object.Bo
 	_, err := b.txManager.InTransaction(ctx, func(ctx context.Context) (string, error) {
 		booking, err := b.bookingRepo.GetByBookingInfo(ctx, bookingInfo)
 		if err != nil {
-			slog.Error("Error while getting booking", "error", err)
+			b.logger.Error("Error while getting booking", "error", err)
 			return "", err
 		}
 
 		err = b.bookingRepo.Delete(ctx, booking)
 		if err != nil {
-			slog.Error("Error while deleting booking", "error", err)
+			b.logger.Error("Error while deleting booking", "error", err)
 			return "", err
 		}
 
@@ -96,14 +103,14 @@ func (b *BookingSaver) ConfirmBooking(ctx context.Context, bookingInfo *object.B
 	_, err := b.txManager.InTransaction(ctx, func(ctx context.Context) (string, error) {
 		booking, err := b.bookingRepo.GetByBookingInfo(ctx, bookingInfo)
 		if err != nil {
-			slog.Error("Error while getting booking", "error", err)
+			b.logger.Error("Error while getting booking", "error", err)
 			return "", err
 		}
 
 		booking.Status = bookingdomain.BookingStatusPaid
 		err = b.bookingRepo.Save(ctx, booking)
 		if err != nil {
-			slog.Error("Error while saving booking", "error", err)
+			b.logger.Error("Error while saving booking", "error", err)
 			return "", err
 		}
 
@@ -111,7 +118,7 @@ func (b *BookingSaver) ConfirmBooking(ctx context.Context, bookingInfo *object.B
 	})
 
 	if err != nil {
-		slog.Error("Error while saving booking", "error", err)
+		b.logger.Error("Error while saving booking", "error", err)
 		return err
 	}
 

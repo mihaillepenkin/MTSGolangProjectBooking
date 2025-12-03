@@ -13,10 +13,11 @@ import (
 
 type JwtService struct {
 	secretKey string
+	logger    *slog.Logger
 }
 
 func NewJwtService(secretKey string) *JwtService {
-	return &JwtService{secretKey: secretKey}
+	return &JwtService{secretKey: secretKey, logger: slog.Default().With("component", "jwt_service")}
 }
 
 func (j *JwtService) ValidateToken(ctx context.Context, token string) (*userdomain.User, error) {
@@ -30,7 +31,7 @@ func (j *JwtService) ValidateToken(ctx context.Context, token string) (*userdoma
 	})
 
 	if err != nil {
-		slog.Error("validate token error", "error", err)
+		j.logger.Error("validate token error", "error", err)
 		return &userdomain.User{}, error2.ErrFailedToAuthorizeUser
 	}
 
@@ -38,13 +39,13 @@ func (j *JwtService) ValidateToken(ctx context.Context, token string) (*userdoma
 		user := &userdomain.User{ID: claims.UserID, Email: claims.Email, Role: claims.Role}
 		err = userdomain.ValidateUser(user)
 		if err != nil {
-			slog.Error("user is incorrect", "error", err)
+			j.logger.Error("user is incorrect", "error", err)
 			return &userdomain.User{}, err
 		}
-		slog.Debug("validation of token is successful with ID", "ID", claims.UserID)
+		j.logger.Debug("validation of token is successful with ID", "ID", claims.UserID)
 		return user, nil
 	}
 
-	slog.Error("validate token error", "error", err)
+	j.logger.Error("validate token error", "error", err)
 	return &userdomain.User{}, error2.ErrFailedToAuthorizeUser
 }

@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS bookings (
     check_in DATE NOT NULL,
     check_out DATE NOT NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'unpaid',
+    payment_id text NOT NULL,
     created_at TIMESTAMP DEFAULT NOW(),
     UNIQUE(user_id, hotel_name, room_number, check_in, check_out)
 );

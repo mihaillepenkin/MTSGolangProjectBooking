@@ -13,11 +13,12 @@ type TransactionManager[T any] interface {
 }
 
 type TransactionManagerImpl[T any] struct {
-	db *sql.DB
+	db     *sql.DB
+	logger *slog.Logger
 }
 
 func NewTransactionManager[T any](db *sql.DB) *TransactionManagerImpl[T] {
-	return &TransactionManagerImpl[T]{db: db}
+	return &TransactionManagerImpl[T]{db: db, logger: slog.Default().With("component", "transaction_manager")}
 }
 
 func (tm *TransactionManagerImpl[T]) InTransaction(ctx context.Context, fn func(ctx context.Context) (T, error)) (T, error) {
@@ -27,7 +28,7 @@ func (tm *TransactionManagerImpl[T]) InTransaction(ctx context.Context, fn func(
 	if ok {
 		result, fnErr := fn(ctx)
 		if fnErr != nil {
-			slog.Error("Error executing fn: ", "error", fnErr)
+			tm.logger.Error("Error executing fn: ", "error", fnErr)
 			return zero, fnErr
 		}
 		return result, nil
@@ -36,25 +37,25 @@ func (tm *TransactionManagerImpl[T]) InTransaction(ctx context.Context, fn func(
 	txCtx := context.WithValue(ctx, txKey{}, tx)
 
 	if err != nil {
-		slog.Error("Error starting transaction: ", "error", err)
+		tm.logger.Error("Error starting transaction: ", "error", err)
 		return zero, err
 	}
 	defer func() {
 		if err != nil {
 			if rollErr := tx.Rollback(); rollErr != nil {
-				slog.Error("Error rolling back transaction: ", "error", rollErr)
+				tm.logger.Error("Error rolling back transaction: ", "error", rollErr)
 			}
 		}
 	}()
 	result, err := fn(txCtx)
 	if err != nil {
-		slog.Error("Error executing fn: ", "error", err)
+		tm.logger.Error("Error executing fn: ", "error", err)
 		return zero, err
 	}
 
 	if commitErr := tx.Commit(); commitErr != nil {
 		_ = tx.Rollback()
-		slog.Error("Error committing transaction: ", "error", commitErr)
+		tm.logger.Error("Error committing transaction: ", "error", commitErr)
 		return zero, commitErr
 	}
 

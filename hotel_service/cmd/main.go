@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"hotel_service/internal/infrastructure/api"
-	"hotel_service/internal/infrastructure/config"
+	"hotel_service/internal/config"
+	"hotel_service/internal/infrastructure/http"
 	"log/slog"
 	"net/http"
 	"os"
@@ -17,17 +17,12 @@ func main() {
 	if db == nil {
 		slog.Error("Error connecting to database")
 	}
-	err := db.Ping()
-	if err != nil {
-		slog.Error(err.Error())
-	}
-	slog.Info("Successfully connected to database")
 
 	hotelHandler := api.HotelHandler{}
 	hotelHandler.Initialize(db)
 
 	mux := api.CreateRouting(&hotelHandler)
-	handler := api.CORSMiddleware(api.AuthMiddleware(mux))
+	handler := api.AuthMiddleware(api.CORSMiddleware(mux))
 
 	server := &http.Server{
 		Addr:    ":8082",
@@ -47,7 +42,7 @@ func main() {
 	slog.Info("Graceful shutdown...")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	err = server.Shutdown(ctx)
+	err := server.Shutdown(ctx)
 	if err != nil {
 		slog.Error(err.Error())
 	}

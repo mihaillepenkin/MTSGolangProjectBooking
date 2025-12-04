@@ -9,5 +9,6 @@ CREATE TABLE IF NOT EXISTS rooms {
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     number INT NOT NULL,
     price INT NOT NULL,
-    CONSTRAINT hotel_id FOREIGN KEY (id) REFERENCES hotels(id),
+    hotel_id BIGINT NOT NULL,
+    CONSTRAINT fk_hotel FOREIGN KEY (hotel_id) REFERENCES hotels(id),
 }

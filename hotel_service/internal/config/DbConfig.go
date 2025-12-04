@@ -45,5 +45,13 @@ func ConfigureDb() *sql.DB {
 		}
 	}(db)
 
+	err = db.Ping()
+	if err != nil {
+		slog.Error(err.Error())
+		return nil
+	} else {
+		slog.Info("Successfully connected to database")
+	}
+
 	return db
 }

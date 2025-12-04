@@ -5,11 +5,11 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/config/payment"
 	bookingdomain "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/booking"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/hotel"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/payment"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/infrastructure/booking"
-	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/infrastructure/config/paymentconfig"
 	hotel2 "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/infrastructure/hotel"
 	payment2 "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/infrastructure/payment"
 	"google.golang.org/grpc"

@@ -4,9 +4,9 @@ import (
 	"context"
 	"log/slog"
 
+	grpchotel "github.com/Vlad-Ali/MTSGolangProjectBooking-protos/gen/proto/hotel"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/hotel"
 	error2 "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/hotel/error"
-	grpchotel "github.com/mihaillepenkin/MTSGolangProjectBooking/protos/gen/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

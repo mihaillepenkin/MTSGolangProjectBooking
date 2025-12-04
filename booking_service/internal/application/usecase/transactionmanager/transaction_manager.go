@@ -6,7 +6,7 @@ import (
 	"log/slog"
 )
 
-type txKey struct{}
+type TxKey struct{}
 
 type TransactionManager[T any] interface {
 	InTransaction(ctx context.Context, fn func(ctx context.Context) (T, error)) (T, error)
@@ -24,7 +24,7 @@ func NewTransactionManager[T any](db *sql.DB) *TransactionManagerImpl[T] {
 func (tm *TransactionManagerImpl[T]) InTransaction(ctx context.Context, fn func(ctx context.Context) (T, error)) (T, error) {
 	var zero T
 	var err error
-	_, ok := ctx.Value(txKey{}).(*sql.Tx)
+	_, ok := ctx.Value(TxKey{}).(*sql.Tx)
 	if ok {
 		result, fnErr := fn(ctx)
 		if fnErr != nil {
@@ -34,7 +34,7 @@ func (tm *TransactionManagerImpl[T]) InTransaction(ctx context.Context, fn func(
 		return result, nil
 	}
 	tx, err := tm.db.BeginTx(ctx, nil)
-	txCtx := context.WithValue(ctx, txKey{}, tx)
+	txCtx := context.WithValue(ctx, TxKey{}, tx)
 
 	if err != nil {
 		tm.logger.Error("Error starting transaction: ", "error", err)
@@ -63,7 +63,7 @@ func (tm *TransactionManagerImpl[T]) InTransaction(ctx context.Context, fn func(
 }
 
 func GetTxFromCtx(ctx context.Context) (*sql.Tx, bool) {
-	tx := ctx.Value(txKey{})
+	tx := ctx.Value(TxKey{})
 	if tx == nil {
 		return nil, false
 	}

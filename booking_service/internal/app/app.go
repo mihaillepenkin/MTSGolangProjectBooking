@@ -81,7 +81,7 @@ func NewApp() (*App, error) {
 		repositories: repos, services: services, handlers: handlers, grpcConn: conn, logger: logger}, nil
 }
 
-func (app *App) Start() error {
+func (app *App) Run() error {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt, syscall.SIGTERM)
 	app.logger.Info("Starting application...")

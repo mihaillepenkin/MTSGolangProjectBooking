@@ -4,20 +4,20 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/app/http"
-	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/app/jwt"
-	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/infrastructure/config/grpcconfig"
-	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/infrastructure/config/paymentconfig"
-	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/infrastructure/config/postgresconfig"
+	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/config/grpc"
+	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/config/http"
+	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/config/jwt"
+	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/config/payment"
+	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/config/postgres"
 	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
-	HTTPConfig     http.HTTPConfig               `yaml:"http"`
+	HTTPConfig     httpconfig.HTTPConfig         `yaml:"http"`
 	PostgresConfig postgresconfig.PostgresConfig `yaml:"postgres"`
 	GRPCConfig     grpcconfig.GRPCConfig         `yaml:"grpc"`
 	PaymentConfig  paymentconfig.PaymentConfig   `yaml:"payment"`
-	JWTConfig      jwt.JWTConfig                 `yaml:"jwt"`
+	JWTConfig      jwtconfig.JWTConfig           `yaml:"jwt"`
 }
 
 func LoadConfig(path string) (*Config, error) {

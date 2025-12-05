@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log/slog"
 	"net/http"
@@ -38,6 +39,14 @@ func (p *PaymentSenderImpl) SendPayment(ctx context.Context, info *payment.Payme
 	if err != nil {
 		p.logger.Error("Error executing payment request", "error", err)
 		return nil, err
+	}
+
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		p.logger.Error("Payment request failed with status",
+			"status", resp.StatusCode)
+
+		return nil, fmt.Errorf("payment failed with status %d",
+			resp.StatusCode)
 	}
 
 	body, err := io.ReadAll(resp.Body)

@@ -4,12 +4,12 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/application/usecase/transactionmanager"
 	bookingdomain "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/booking"
 	error2 "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/booking/error"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/booking/object"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/hotel"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/payment"
+	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/usecase/case/transactionmanager"
 )
 
 type BookingSaver struct {
@@ -38,7 +38,7 @@ func (b *BookingSaver) BookRoom(ctx context.Context, bookingInfo *object.Booking
 			return "", err
 		}
 
-		if !isIntersected {
+		if isIntersected {
 			return "", error2.ErrBookingIsIntersected
 		}
 

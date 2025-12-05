@@ -6,9 +6,9 @@ import (
 	"log/slog"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/application/dto/jwtclaims"
 	userdomain "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/user"
 	error2 "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/user/error"
+	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/usecase/dto/jwtclaims"
 )
 
 type JwtService struct {

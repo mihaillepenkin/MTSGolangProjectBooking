@@ -1,12 +1,12 @@
 package app
 
 import (
-	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/application/usecase/bookingprovider"
-	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/application/usecase/bookingsaver"
-	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/application/usecase/jwtservice"
-	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/application/usecase/transactionmanager"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/booking"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/user"
+	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/usecase/case/bookingprovider"
+	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/usecase/case/bookingsaver"
+	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/usecase/case/jwtservice"
+	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/usecase/case/transactionmanager"
 )
 
 type Services struct {

@@ -7,11 +7,12 @@ type Room struct {
 }
 
 type Hotel struct {
-	Id       int64  `json:"id"`
-	Name     string `json:"name"`
-	Location string `json:"location"`
-	OwnerId  int64  `json:"ownerId"`
-	Rooms    []Room `json:"rooms"`
+	Id          int64  `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Location    string `json:"location"`
+	OwnerId     int64  `json:"ownerId"`
+	Rooms       []Room `json:"rooms"`
 }
 
 type AllHotelsInfoResponseDto struct {

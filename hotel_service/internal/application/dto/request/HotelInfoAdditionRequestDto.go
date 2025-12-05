@@ -6,8 +6,9 @@ type Room struct {
 }
 
 type HotelInfoAdditionRequestDto struct {
-	Name     string `json:"name"`
-	Location string `json:"location"`
-	OwnerId  int64  `json:"ownerId"`
-	Rooms    []Room `json:"rooms"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Location    string `json:"location"`
+	OwnerId     int64  `json:"ownerId"`
+	Rooms       []Room `json:"rooms"`
 }

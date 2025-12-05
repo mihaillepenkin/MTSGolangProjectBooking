@@ -5,15 +5,18 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/joho/godotenv"
 )
 
-type DbConfig struct {
-	DbHost     string
-	DbPort     string
-	DbUser     string
-	DbPassword string
-	DbName     string
+type PostgresConfig struct {
+	Host     string
+	Port     string
+	User     string
+	Password string
+	Name     string
 }
 
 func ConfigureDb() *sql.DB {
@@ -23,15 +26,15 @@ func ConfigureDb() *sql.DB {
 		return nil
 	}
 
-	cfg := DbConfig{
-		DbHost:     os.Getenv("DB_HOST"),
-		DbPort:     os.Getenv("DB_PORT"),
-		DbUser:     os.Getenv("DB_USER"),
-		DbPassword: os.Getenv("DB_PASSWORD"),
-		DbName:     os.Getenv("DB_NAME"),
+	cfg := &PostgresConfig{
+		Host:     os.Getenv("DB_HOST"),
+		Port:     os.Getenv("DB_PORT"),
+		User:     os.Getenv("DB_USER"),
+		Password: os.Getenv("DB_PASSWORD"),
+		Name:     os.Getenv("DB_NAME"),
 	}
 
-	dsn := "host=" + cfg.DbHost + " port=" + cfg.DbPort + " user=" + cfg.DbUser + " password=" + cfg.DbPassword + " dbname=" + cfg.DbName + " sslmode=disable"
+	dsn := "host=" + cfg.Host + " port=" + cfg.Port + " user=" + cfg.User + " password=" + cfg.Password + " dbname=" + cfg.Name + " sslmode=disable"
 
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
@@ -54,4 +57,32 @@ func ConfigureDb() *sql.DB {
 	}
 
 	return db
+}
+
+func RunMigrations(db *sql.DB) error {
+	driver, err := postgres.WithInstance(db, &postgres.Config{})
+	if err != nil {
+		slog.Error(err.Error())
+		return err
+	}
+
+	m, err := migrate.NewWithDatabaseInstance("file://migrations", "postgres", driver)
+	if err != nil {
+		slog.Error(err.Error())
+		return err
+	}
+	err = m.Up()
+	if err != nil {
+		slog.Error(err.Error())
+		return err
+	}
+
+	version, dirty, err := m.Version()
+	if err != nil {
+		slog.Error(err.Error())
+		return err
+	}
+
+	slog.Info("Migrations complete", "version", version, "dirty", dirty)
+	return nil
 }

@@ -24,7 +24,7 @@ import (
 var (
 	testDB      *sql.DB
 	testRepo    *BookingRepository
-	testBooking = bookingdomain.Booking{UserID: uuid.New().String(), HotelName: "hotelName", RoomNumber: "1", TotalPrice: 100, Currency: "USD", CheckIn: time.Date(2025, 10, 1, 0, 0, 0, 0, time.UTC),
+	testBooking = bookingdomain.Booking{UserID: uuid.New().String(), HotelID: 1, RoomNumber: 1, TotalPrice: 100, Currency: "USD", CheckIn: time.Date(2025, 10, 1, 0, 0, 0, 0, time.UTC),
 		CheckOut: time.Date(2025, 10, 2, 0, 0, 0, 0, time.UTC), Status: bookingdomain.BookingStatusUnpaid, PaymentID: uuid.New().String()}
 )
 
@@ -53,8 +53,6 @@ func setup() error {
 	if err != nil {
 		return fmt.Errorf("error connecting to postgres: %w", err)
 	}
-
-	connStr += " sslmode=disable"
 
 	testDB = db
 	testRepo = NewBookingRepository(testDB)
@@ -168,7 +166,7 @@ func TestBookingRepository_GetDurationsByRoom(t *testing.T) {
 
 	txCtx := context.WithValue(ctx, transactionmanager.TxKey{}, tx)
 	assert.Equal(t, nil, testRepo.Save(txCtx, &booking), fmt.Sprintf("testRepo.Save must be %v", nil))
-	durations, err := testRepo.GetDurationsByRoom(txCtx, booking.HotelName, booking.RoomNumber)
+	durations, err := testRepo.GetDurationsByRoom(txCtx, booking.HotelID, booking.RoomNumber)
 	if err != nil {
 		t.Fatalf("error getting durations: %v", err)
 	}
@@ -196,14 +194,14 @@ func TestBookingRepository_IsIntersected(t *testing.T) {
 	defer tx.Rollback()
 	txCtx := context.WithValue(ctx, transactionmanager.TxKey{}, tx)
 	assert.Equal(t, nil, testRepo.Save(txCtx, &firstBooking), fmt.Sprintf("testRepo.Save must be %v", nil))
-	isIntersected, err := testRepo.IsIntersected(txCtx, secondBooking.HotelName, secondBooking.RoomNumber, secondBooking.CheckIn, secondBooking.CheckOut)
+	isIntersected, err := testRepo.IsIntersected(txCtx, secondBooking.HotelID, secondBooking.RoomNumber, secondBooking.CheckIn, secondBooking.CheckOut)
 	if err != nil {
 		t.Fatalf("error getting isIntersected: %v", err)
 	}
 
 	assert.Equal(t, false, isIntersected, "isIntersected must be false")
 
-	isIntersected, err = testRepo.IsIntersected(txCtx, thirdBooking.HotelName, thirdBooking.RoomNumber, thirdBooking.CheckIn, thirdBooking.CheckOut)
+	isIntersected, err = testRepo.IsIntersected(txCtx, thirdBooking.HotelID, thirdBooking.RoomNumber, thirdBooking.CheckIn, thirdBooking.CheckOut)
 	if err != nil {
 		t.Fatalf("error getting isIntersected: %v", err)
 	}
@@ -224,7 +222,7 @@ func TestBookingRepository_GetByBookingInfo(t *testing.T) {
 	txCtx := context.WithValue(ctx, transactionmanager.TxKey{}, tx)
 	assert.Equal(t, nil, testRepo.Save(txCtx, &booking), fmt.Sprintf("testRepo.Save must be %v", nil))
 
-	newBooking, err := testRepo.GetByBookingInfo(txCtx, &object.BookingInfo{HotelName: booking.HotelName, RoomNumber: booking.RoomNumber, CheckIn: booking.CheckIn, CheckOut: booking.CheckOut, User: userdomain.User{ID: booking.UserID}})
+	newBooking, err := testRepo.GetByBookingInfo(txCtx, &object.BookingInfo{HotelID: booking.HotelID, RoomNumber: booking.RoomNumber, CheckIn: booking.CheckIn, CheckOut: booking.CheckOut, User: userdomain.User{ID: booking.UserID}})
 	if err != nil {
 		t.Fatalf("error getting booking info: %v", err)
 	}
@@ -250,7 +248,7 @@ func TestBookingRepository_ShouldReturnNotFoundErrForGetBookingInfo(t *testing.T
 	defer tx.Rollback()
 
 	txCtx := context.WithValue(ctx, transactionmanager.TxKey{}, tx)
-	_, err = testRepo.GetByBookingInfo(txCtx, &object.BookingInfo{HotelName: booking.HotelName, RoomNumber: booking.RoomNumber, CheckIn: booking.CheckIn, CheckOut: booking.CheckOut, User: userdomain.User{ID: booking.UserID}})
+	_, err = testRepo.GetByBookingInfo(txCtx, &object.BookingInfo{HotelID: booking.HotelID, RoomNumber: booking.RoomNumber, CheckIn: booking.CheckIn, CheckOut: booking.CheckOut, User: userdomain.User{ID: booking.UserID}})
 	assert.Assert(t, errors.Is(err, error2.ErrBookingIsNotFound), fmt.Sprintf("error should be %v", error2.ErrBookingIsNotFound))
 }
 
@@ -267,7 +265,7 @@ func TestBookingRepository_GetByHotel(t *testing.T) {
 	txCtx := context.WithValue(ctx, transactionmanager.TxKey{}, tx)
 	assert.Equal(t, nil, testRepo.Save(txCtx, &booking), fmt.Sprintf("testRepo.Save must be %v", nil))
 
-	bookings, err := testRepo.GetByHotel(txCtx, booking.HotelName)
+	bookings, err := testRepo.GetByHotel(txCtx, booking.HotelID)
 	if err != nil {
 		t.Fatalf("error getting bookings: %v", err)
 	}

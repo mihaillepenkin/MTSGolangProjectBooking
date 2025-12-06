@@ -4,8 +4,8 @@ import "time"
 
 type BookingResponse struct {
 	UserID     string    `json:"userID"`
-	HotelName  string    `json:"hotelName"`
-	RoomNumber string    `json:"roomNumber"`
+	HotelID    int64     `json:"hotelID"`
+	RoomNumber int64     `json:"roomNumber"`
 	TotalPrice float64   `json:"totalPrice"`
 	Currency   string    `json:"currency"`
 	CheckIn    time.Time `json:"checkIn"`

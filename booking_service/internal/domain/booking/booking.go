@@ -28,8 +28,8 @@ func ValidateAndGetBookingStatus(status string) (BookingStatus, error) {
 type Booking struct {
 	ID         object.BookingID
 	UserID     string
-	HotelName  string
-	RoomNumber string
+	HotelID    int64
+	RoomNumber int64
 	TotalPrice float64
 	Currency   string
 	CheckIn    time.Time

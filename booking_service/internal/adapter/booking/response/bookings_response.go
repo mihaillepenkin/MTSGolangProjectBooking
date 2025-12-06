@@ -9,7 +9,7 @@ type BookingsResponse struct {
 func NewBookingsResponse(bookings []*boookingdomain.Booking) *BookingsResponse {
 	bookingsResponse := &BookingsResponse{Bookings: make([]*BookingResponse, 0)}
 	for _, booking := range bookings {
-		bookingsResponse.Bookings = append(bookingsResponse.Bookings, &BookingResponse{UserID: booking.UserID, HotelName: booking.HotelName,
+		bookingsResponse.Bookings = append(bookingsResponse.Bookings, &BookingResponse{UserID: booking.UserID, HotelID: booking.HotelID,
 			RoomNumber: booking.RoomNumber, TotalPrice: booking.TotalPrice, Currency: booking.Currency, CheckIn: booking.CheckIn, CheckOut: booking.CheckOut})
 	}
 

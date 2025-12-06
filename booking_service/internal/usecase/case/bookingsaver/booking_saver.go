@@ -32,7 +32,7 @@ func (b *BookingSaver) BookRoom(ctx context.Context, bookingInfo *object.Booking
 	}
 
 	return b.txManager.InTransaction(ctx, func(ctx context.Context) (string, error) {
-		isIntersected, err := b.bookingRepo.IsIntersected(ctx, bookingInfo.HotelName, bookingInfo.RoomNumber, bookingInfo.CheckIn, bookingInfo.CheckOut)
+		isIntersected, err := b.bookingRepo.IsIntersected(ctx, bookingInfo.HotelID, bookingInfo.RoomNumber, bookingInfo.CheckIn, bookingInfo.CheckOut)
 		if err != nil {
 			b.logger.Error("Error while checking intersected booking", "error", err)
 			return "", err
@@ -42,7 +42,7 @@ func (b *BookingSaver) BookRoom(ctx context.Context, bookingInfo *object.Booking
 			return "", error2.ErrBookingIsIntersected
 		}
 
-		roomInfo, err := b.hotelRepo.GetRoomInfo(ctx, bookingInfo.HotelName, bookingInfo.RoomNumber)
+		roomInfo, err := b.hotelRepo.GetRoomInfo(ctx, bookingInfo.HotelID, bookingInfo.RoomNumber)
 		if err != nil {
 			b.logger.Error("Error while getting room info", "error", err)
 			return "", err
@@ -52,7 +52,7 @@ func (b *BookingSaver) BookRoom(ctx context.Context, bookingInfo *object.Booking
 
 		booking := &bookingdomain.Booking{
 			UserID:     bookingInfo.User.ID,
-			HotelName:  bookingInfo.HotelName,
+			HotelID:    bookingInfo.HotelID,
 			RoomNumber: bookingInfo.RoomNumber,
 			TotalPrice: float64(days * roomInfo.Amount),
 			Currency:   roomInfo.Currency,

@@ -8,8 +8,8 @@ import (
 
 type BookingInfo struct {
 	User       user.User `json:"user"`
-	HotelName  string    `json:"hotel_name"`
-	RoomNumber string    `json:"room_number"`
+	HotelID    int64     `json:"hotel_id"`
+	RoomNumber int64     `json:"room_number"`
 	CheckIn    time.Time `json:"check_in"`
 	CheckOut   time.Time `json:"check_out"`
 }

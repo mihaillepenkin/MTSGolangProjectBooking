@@ -21,8 +21,8 @@ func NewBookingProvider(bookingRepo booking.Repository, hotelRepo hotel.Reposito
 	return &BookingProvider{bookingRepo: bookingRepo, hotelRepo: hotelRepo, logger: slog.Default().With("component", "booking_provider")}
 }
 
-func (b *BookingProvider) GetOccupiedRoomDurations(ctx context.Context, hotelName string, roomNumber string) ([][]time.Time, error) {
-	durations, err := b.bookingRepo.GetDurationsByRoom(ctx, hotelName, roomNumber)
+func (b *BookingProvider) GetOccupiedRoomDurations(ctx context.Context, hotelID int64, roomNumber int64) ([][]time.Time, error) {
+	durations, err := b.bookingRepo.GetDurationsByRoom(ctx, hotelID, roomNumber)
 	if err != nil {
 		b.logger.Error("Failed to get occupied durations", "error", err)
 		return nil, err
@@ -42,19 +42,19 @@ func (b *BookingProvider) GetBookingsByUser(ctx context.Context, user *user.User
 	return bookings, nil
 }
 
-func (b *BookingProvider) GetBookingsByHotelier(ctx context.Context, user *user.User, hotelName string) ([]*booking.Booking, error) {
-	ok, err := b.hotelRepo.IsHotelier(ctx, user.ID, hotelName)
+func (b *BookingProvider) GetBookingsByHotelier(ctx context.Context, user *user.User, hotelID int64) ([]*booking.Booking, error) {
+	ok, err := b.hotelRepo.IsHotelier(ctx, user.ID, hotelID)
 	if err != nil {
 		b.logger.Error("Error while checking hotelier: ", "error", err)
 		return nil, err
 	}
 
 	if !ok {
-		b.logger.Debug("Hotelier is not valid", "hotelierID", user.ID, "hotelName", hotelName)
+		b.logger.Debug("Hotelier is not valid", "hotelierID", user.ID, "hotelName", hotelID)
 		return nil, error2.ErrHotelierIsNotValid
 	}
 
-	bookings, err := b.bookingRepo.GetByHotel(ctx, hotelName)
+	bookings, err := b.bookingRepo.GetByHotel(ctx, hotelID)
 	if err != nil {
 		b.logger.Error("Error while getting bookings by hotelier: ", "error", err)
 		return nil, err

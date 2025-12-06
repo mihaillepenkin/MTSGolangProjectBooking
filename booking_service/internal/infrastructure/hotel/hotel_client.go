@@ -21,8 +21,8 @@ func NewHotelClient(conn *grpc.ClientConn) *HotelClient {
 	return &HotelClient{client: grpchotel.NewHotelClient(conn), logger: slog.Default().With("component", "hotel_client")}
 }
 
-func (h *HotelClient) IsHotelier(ctx context.Context, userID string, hotelName string) (bool, error) {
-	request := &grpchotel.IsHotelierRequest{UserID: userID, HotelName: hotelName}
+func (h *HotelClient) IsHotelier(ctx context.Context, userID string, hotelID int64) (bool, error) {
+	request := &grpchotel.IsHotelierRequest{UserID: userID, HotelID: hotelID}
 
 	response, err := h.client.IsHotelier(ctx, request)
 	if err != nil {
@@ -45,8 +45,8 @@ func (h *HotelClient) IsHotelier(ctx context.Context, userID string, hotelName s
 	return response.IsHotelier, nil
 }
 
-func (h *HotelClient) GetRoomInfo(ctx context.Context, hotelName string, roomNumber string) (*hotel.RoomInfo, error) {
-	request := &grpchotel.RoomInfoRequest{HotelName: hotelName, RoomNumber: roomNumber}
+func (h *HotelClient) GetRoomInfo(ctx context.Context, hotelID int64, roomNumber int64) (*hotel.RoomInfo, error) {
+	request := &grpchotel.RoomInfoRequest{HotelID: hotelID, RoomNumber: roomNumber}
 
 	response, err := h.client.GetRoomInfo(ctx, request)
 	if err != nil {

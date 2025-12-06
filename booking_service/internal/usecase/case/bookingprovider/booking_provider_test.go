@@ -15,12 +15,12 @@ import (
 )
 
 var (
-	testHotelName  = "1"
-	testUserID     = "1"
-	testRoomNumber = "1"
-	testUser       = &userdomain.User{ID: testUserID}
-	testDurations  = [][]time.Time{{time.Date(2025, 10, 10, 0, 0, 0, 0, time.UTC), time.Date(2025, 10, 11, 0, 0, 0, 0, time.UTC)}}
-	testBooking    = &booking.Booking{UserID: testUserID, HotelName: testHotelName, RoomNumber: testRoomNumber, TotalPrice: 100, Currency: "USD", CheckIn: testDurations[0][0], CheckOut: testDurations[0][1], Status: booking.BookingStatusPaid, PaymentID: "1"}
+	testHotelName  int64 = 1
+	testUserID           = "1"
+	testRoomNumber int64 = 1
+	testUser             = &userdomain.User{ID: testUserID}
+	testDurations        = [][]time.Time{{time.Date(2025, 10, 10, 0, 0, 0, 0, time.UTC), time.Date(2025, 10, 11, 0, 0, 0, 0, time.UTC)}}
+	testBooking          = &booking.Booking{UserID: testUserID, HotelID: testHotelName, RoomNumber: testRoomNumber, TotalPrice: 100, Currency: "USD", CheckIn: testDurations[0][0], CheckOut: testDurations[0][1], Status: booking.BookingStatusPaid, PaymentID: "1"}
 	testProvider   *BookingProvider
 )
 
@@ -36,7 +36,7 @@ func (m *MockBookingRepo) Delete(ctx context.Context, booking *booking.Booking) 
 	panic("implement me")
 }
 
-func (m *MockBookingRepo) IsIntersected(ctx context.Context, hotelName string, hotelRoom string, checkIn time.Time, checkOut time.Time) (bool, error) {
+func (m *MockBookingRepo) IsIntersected(ctx context.Context, hotelName int64, hotelRoom int64, checkIn time.Time, checkOut time.Time) (bool, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -46,8 +46,8 @@ func (m *MockBookingRepo) GetByBookingInfo(ctx context.Context, bookingInfo *obj
 	panic("implement me")
 }
 
-func (m *MockBookingRepo) GetByHotel(ctx context.Context, hotelName string) ([]*booking.Booking, error) {
-	if hotelName == testHotelName {
+func (m *MockBookingRepo) GetByHotel(ctx context.Context, hotelID int64) ([]*booking.Booking, error) {
+	if hotelID == testHotelName {
 		return []*booking.Booking{testBooking}, nil
 	}
 	return make([]*booking.Booking, 0), nil
@@ -60,8 +60,8 @@ func (m *MockBookingRepo) GetByUser(ctx context.Context, userID string) ([]*book
 	return make([]*booking.Booking, 0), nil
 }
 
-func (m *MockBookingRepo) GetDurationsByRoom(ctx context.Context, hotelName string, roomNumber string) ([][]time.Time, error) {
-	if hotelName == testHotelName && roomNumber == testRoomNumber {
+func (m *MockBookingRepo) GetDurationsByRoom(ctx context.Context, hotelID int64, roomNumber int64) ([][]time.Time, error) {
+	if hotelID == testHotelName && roomNumber == testRoomNumber {
 		return testDurations, nil
 	}
 	return [][]time.Time{}, nil
@@ -74,7 +74,7 @@ func (m *MockBookingRepo) GetBookingsByStatus(ctx context.Context, status bookin
 
 type MockHotelRepo struct{}
 
-func (m *MockHotelRepo) IsHotelier(ctx context.Context, userID string, hotelName string) (bool, error) {
+func (m *MockHotelRepo) IsHotelier(ctx context.Context, userID string, hotelName int64) (bool, error) {
 	if userID == testUserID && hotelName == testHotelName {
 		return true, nil
 	}
@@ -82,7 +82,7 @@ func (m *MockHotelRepo) IsHotelier(ctx context.Context, userID string, hotelName
 	return false, nil
 }
 
-func (m *MockHotelRepo) GetRoomInfo(ctx context.Context, hotelName string, roomNumber string) (*hotel.RoomInfo, error) {
+func (m *MockHotelRepo) GetRoomInfo(ctx context.Context, hotelName int64, roomNumber int64) (*hotel.RoomInfo, error) {
 	//TODO implement me
 	panic("implement me")
 }
@@ -97,7 +97,7 @@ func TestMain(m *testing.M) {
 
 func TestBookingProvider_GetOccupiedRoomDurations(t *testing.T) {
 	ctx := context.Background()
-	durations, err := testProvider.GetOccupiedRoomDurations(ctx, testHotelName, "2")
+	durations, err := testProvider.GetOccupiedRoomDurations(ctx, testHotelName, 2)
 	assert.Assert(t, err == nil)
 	assert.Equal(t, len(durations), 0, "Expected durations to be empty")
 	durations, err = testProvider.GetOccupiedRoomDurations(ctx, testHotelName, testRoomNumber)
@@ -112,7 +112,7 @@ func TestBookingProvider_GetBookingsByHotelier(t *testing.T) {
 	bookings, err := testProvider.GetBookingsByHotelier(ctx, testUser, testRoomNumber)
 	assert.Assert(t, err == nil)
 	assert.Assert(t, len(bookings) != 0)
-	assert.DeepEqual(t, bookings[0].HotelName, testBooking.HotelName)
+	assert.DeepEqual(t, bookings[0].HotelID, testBooking.HotelID)
 }
 
 func TestBookingProvider_GetBookingsByUser(t *testing.T) {

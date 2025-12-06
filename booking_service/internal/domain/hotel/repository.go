@@ -3,6 +3,6 @@ package hotel
 import "context"
 
 type Repository interface {
-	IsHotelier(ctx context.Context, userID string, hotelName string) (bool, error)
-	GetRoomInfo(ctx context.Context, hotelName string, roomNumber string) (*RoomInfo, error)
+	IsHotelier(ctx context.Context, userID string, hotelID int64) (bool, error)
+	GetRoomInfo(ctx context.Context, hotelID int64, roomNumber int64) (*RoomInfo, error)
 }

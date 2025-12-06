@@ -6,6 +6,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/adapter/booking/request"
 	response2 "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/adapter/booking/response"
@@ -57,7 +58,7 @@ func (b *BookingHandler) BookRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bookingInfo := &object.BookingInfo{User: *user, HotelName: bookRoomRequest.HotelName, RoomNumber: bookRoomRequest.RoomNumber, CheckIn: bookRoomRequest.CheckIn, CheckOut: bookRoomRequest.CheckOut}
+	bookingInfo := &object.BookingInfo{User: *user, HotelID: bookRoomRequest.HotelID, RoomNumber: bookRoomRequest.RoomNumber, CheckIn: bookRoomRequest.CheckIn, CheckOut: bookRoomRequest.CheckOut}
 	url, err := b.bookingSaver.BookRoom(r.Context(), bookingInfo)
 	if err != nil {
 		b.logger.Error("Error booking room ", "Error", err)
@@ -96,8 +97,8 @@ func (b *BookingHandler) GetHotelBookings(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	hotelName := GetHotelNameFromRequest(r)
-	if hotelName == "" {
+	hotelName, err := GetHotelNameFromRequest(r)
+	if err != nil {
 		b.logger.Error("Invalid hotel booking name")
 		http.Error(w, "Invalid hotel parameter", http.StatusBadRequest)
 		return
@@ -157,15 +158,15 @@ func (b *BookingHandler) GetUserBookings(w http.ResponseWriter, r *http.Request)
 }
 
 func (b *BookingHandler) GetOccupiedRoomDurations(w http.ResponseWriter, r *http.Request) {
-	hotelName := GetHotelNameFromRequest(r)
-	if hotelName == "" {
+	hotelName, err := GetHotelNameFromRequest(r)
+	if err != nil {
 		b.logger.Error("Invalid hotel booking name")
 		http.Error(w, "Invalid hotel parameter", http.StatusBadRequest)
 		return
 	}
 
-	roomNumber := GetRoomNumberFromRequest(r)
-	if roomNumber == "" {
+	roomNumber, err := GetRoomNumberFromRequest(r)
+	if err != nil {
 		b.logger.Error("Invalid room number ")
 		http.Error(w, "Invalid room number", http.StatusBadRequest)
 		return
@@ -188,10 +189,12 @@ func (b *BookingHandler) GetOccupiedRoomDurations(w http.ResponseWriter, r *http
 	}
 }
 
-func GetHotelNameFromRequest(r *http.Request) string {
-	return r.URL.Query().Get("hotelName")
+func GetHotelNameFromRequest(r *http.Request) (int64, error) {
+	num, err := strconv.ParseInt(r.URL.Query().Get("hotelID"), 10, 64)
+	return num, err
 }
 
-func GetRoomNumberFromRequest(r *http.Request) string {
-	return r.URL.Query().Get("roomNumber")
+func GetRoomNumberFromRequest(r *http.Request) (int64, error) {
+	num, err := strconv.ParseInt(r.URL.Query().Get("roomNumber"), 10, 64)
+	return num, err
 }

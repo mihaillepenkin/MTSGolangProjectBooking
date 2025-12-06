@@ -64,9 +64,10 @@ func (b *BookingHandler) BookRoom(w http.ResponseWriter, r *http.Request) {
 		b.logger.Error("Error booking room ", "Error", err)
 		if errors.Is(err, error2.ErrBookingIsIntersected) {
 			http.Error(w, "Booking is intersected", http.StatusConflict)
-			return
 		} else if errors.Is(err, error3.ErrHotelRoomIsNotFound) {
 			http.Error(w, "Hotel room is not found", http.StatusNotFound)
+		} else if errors.Is(err, error2.ErrTimeDurationIsNotValid) {
+			http.Error(w, "Time duration is not valid", http.StatusBadRequest)
 		} else {
 			http.Error(w, "Failed to book room", http.StatusInternalServerError)
 		}

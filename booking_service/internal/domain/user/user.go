@@ -6,6 +6,11 @@ import (
 	error2 "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/user/error"
 )
 
+const (
+	RoleHotelier string = "hotelier"
+	RoleClient   string = "client"
+)
+
 type User struct {
 	ID    string `json:"id"`
 	Email string `json:"email"`
@@ -26,9 +31,9 @@ func ValidateUser(user *User) error {
 }
 
 func IsClient(user *User) bool {
-	return user.Role == "client"
+	return user.Role == RoleClient
 }
 
 func IsHotelier(user *User) bool {
-	return user.Role == "hotelier"
+	return user.Role == RoleHotelier
 }

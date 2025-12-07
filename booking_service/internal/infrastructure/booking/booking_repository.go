@@ -7,18 +7,19 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/application/usecase/transactionmanager"
 	bookingdomain "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/booking"
+	error2 "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/booking/error"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/booking/object"
-	error2 "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/error"
+	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/usecase/case/transactionmanager"
 )
 
 type BookingRepository struct {
-	db *sql.DB
+	db     *sql.DB
+	logger *slog.Logger
 }
 
 func NewBookingRepository(db *sql.DB) *BookingRepository {
-	return &BookingRepository{db: db}
+	return &BookingRepository{db: db, logger: slog.Default().With("component", "booking_repository")}
 }
 
 func (b *BookingRepository) Save(ctx context.Context, booking *bookingdomain.Booking) error {
@@ -27,27 +28,27 @@ func (b *BookingRepository) Save(ctx context.Context, booking *bookingdomain.Boo
 	if !ok {
 		tx, err = b.db.BeginTx(ctx, nil)
 		if err != nil {
-			slog.Error("Error begin transaction", "error", err)
+			b.logger.Error("Error begin transaction", "error", err)
 			return err
 		}
 		defer func() {
 			if err != nil {
 				if err2 := tx.Rollback(); err2 != nil {
-					slog.Error("Error rollback", "error", err2)
+					b.logger.Error("Error rollback", "error", err2)
 				}
 			}
 		}()
 	}
 
-	query := `INSERT INTO bookings (user_id, hotel_name, room_number, total_price, currency, check_in,
-                             check_out, status, created_at) VALUES 
-                                                                ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
-ON CONFLICT (user_id, hotel_name, room_number, check_in, check_out) DO UPDATE SET status = $8`
+	query := `INSERT INTO bookings (user_id, hotel_id, room_number, total_price, currency, check_in,
+                             check_out, status, created_at, payment_id) VALUES 
+                                                                ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
+ON CONFLICT (user_id, hotel_id, room_number, check_in, check_out) DO UPDATE SET status = $8`
 
-	result, execErr := tx.ExecContext(ctx, query, booking.UserID, booking.HotelName, booking.RoomNumber, booking.TotalPrice,
-		booking.Currency, booking.CheckIn, booking.CheckOut, booking.Status, time.Now())
+	result, execErr := tx.ExecContext(ctx, query, booking.UserID, booking.HotelID, booking.RoomNumber, booking.TotalPrice,
+		booking.Currency, booking.CheckIn, booking.CheckOut, booking.Status, time.Now(), booking.PaymentID)
 	if execErr != nil {
-		slog.Error("Error saving booking", "error", execErr)
+		b.logger.Error("Error saving booking", "error", execErr)
 		err = execErr
 		return err
 	}
@@ -55,7 +56,7 @@ ON CONFLICT (user_id, hotel_name, room_number, check_in, check_out) DO UPDATE SE
 	rowsAffected, err := result.RowsAffected()
 
 	if err != nil {
-		slog.Error("Error getting rows affected", "error", err)
+		b.logger.Error("Error getting rows affected", "error", err)
 		return err
 	}
 
@@ -65,7 +66,7 @@ ON CONFLICT (user_id, hotel_name, room_number, check_in, check_out) DO UPDATE SE
 
 	if !ok {
 		if commitErr := tx.Commit(); commitErr != nil {
-			slog.Error("Error commit transaction", "error", commitErr)
+			b.logger.Error("Error commit transaction", "error", commitErr)
 			_ = tx.Rollback()
 			return commitErr
 		}
@@ -74,42 +75,149 @@ ON CONFLICT (user_id, hotel_name, room_number, check_in, check_out) DO UPDATE SE
 	return nil
 }
 
-func (b *BookingRepository) IsIntersected(ctx context.Context, hotelName string, hotelRoom string, checkIn time.Time, checkOut time.Time) (bool, error) {
+func (b *BookingRepository) Delete(ctx context.Context, booking *bookingdomain.Booking) error {
 	var err error
 	tx, ok := transactionmanager.GetTxFromCtx(ctx)
 	if !ok {
 		tx, err = b.db.BeginTx(ctx, nil)
 		if err != nil {
-			slog.Error("Error begin transaction", "error", err)
+			b.logger.Error("Error begin transaction", "error", err)
+			return err
+		}
+		defer func() {
+			if err != nil {
+				if err2 := tx.Rollback(); err2 != nil {
+					b.logger.Error("Error rollback", "error", err2)
+				}
+			}
+		}()
+	}
+
+	query := `DELETE FROM bookings WHERE user_id = $1 AND hotel_id = $2 AND room_number = $3
+              AND check_in = $4 AND check_out = $5`
+	result, execErr := tx.ExecContext(ctx, query, booking.UserID, booking.HotelID, booking.RoomNumber, booking.CheckIn, booking.CheckOut)
+
+	if execErr != nil {
+		b.logger.Error("Error deleting booking", "error", execErr)
+		err = execErr
+		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+
+	if err != nil {
+		b.logger.Error("Error getting rows affected", "error", err)
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return error2.ErrBookingIsNotFound
+	}
+
+	if !ok {
+		if commitErr := tx.Commit(); commitErr != nil {
+			b.logger.Error("Error commit transaction", "error", commitErr)
+			_ = tx.Rollback()
+			return commitErr
+		}
+	}
+
+	return nil
+}
+
+func (b *BookingRepository) GetDurationsByRoom(ctx context.Context, hotelID int64, roomNumber int64) ([][]time.Time, error) {
+	var err error
+	tx, ok := transactionmanager.GetTxFromCtx(ctx)
+	if !ok {
+		tx, err = b.db.BeginTx(ctx, nil)
+		if err != nil {
+			b.logger.Error("Error begin transaction", "error", err)
+			return nil, err
+		}
+
+		defer func() {
+			if err != nil {
+				if err2 := tx.Rollback(); err2 != nil {
+					b.logger.Error("Error rollback", "error", err2)
+				}
+			}
+		}()
+	}
+
+	query := `SELECT check_in, check_out
+    FROM bookings
+    WHERE hotel_id = $1 AND room_number = $2 and status ='paid'`
+
+	rows, err := tx.QueryContext(ctx, query, hotelID, roomNumber)
+	if err != nil {
+		b.logger.Error("Error querying bookings", "error", err)
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	durations := make([][]time.Time, 0)
+	for rows.Next() {
+		var checkIn, checkOut time.Time
+		if err = rows.Scan(&checkIn, &checkOut); err != nil {
+			b.logger.Error("Error scanning bookings", "error", err)
+			return nil, err
+		}
+
+		durations = append(durations, []time.Time{checkIn, checkOut})
+	}
+
+	if err = rows.Err(); err != nil {
+		b.logger.Error("Error scanning bookings", "error", err)
+		return nil, err
+	}
+
+	if !ok {
+		if commitErr := tx.Commit(); commitErr != nil {
+			b.logger.Error("Error commit transaction", "error", commitErr)
+			_ = tx.Rollback()
+			return nil, commitErr
+		}
+	}
+	return durations, nil
+}
+
+func (b *BookingRepository) IsIntersected(ctx context.Context, hotelID int64, hotelRoom int64, checkIn time.Time, checkOut time.Time) (bool, error) {
+	var err error
+	tx, ok := transactionmanager.GetTxFromCtx(ctx)
+	if !ok {
+		tx, err = b.db.BeginTx(ctx, nil)
+		if err != nil {
+			b.logger.Error("Error begin transaction", "error", err)
 			return false, err
 		}
 
 		defer func() {
 			if err != nil {
 				if err2 := tx.Rollback(); err2 != nil {
-					slog.Error("Error rollback", "error", err2)
+					b.logger.Error("Error rollback", "error", err2)
 				}
 			}
 		}()
 	}
 
-	query := `SELECT COUNT(*) FROM locked_rows
-                WHERE hotel_name = $1 
-                  AND hotel_number = $2
+	query := `SELECT COUNT(*) FROM bookings
+                WHERE hotel_id = $1 
+                  AND room_number = $2
                   AND check_in < $4
-                  AND check_out > $5`
+                  AND check_out > $3`
 
 	var count int
-	execErr := tx.QueryRowContext(ctx, query, hotelName, hotelRoom, checkIn, checkOut).Scan(&count)
+	execErr := tx.QueryRowContext(ctx, query, hotelID, hotelRoom, checkIn, checkOut).Scan(&count)
 	if execErr != nil {
-		slog.Error("Error checking booking", "error", execErr)
+		b.logger.Error("Error checking booking", "error", execErr)
 		return false, execErr
 	}
 
 	if !ok {
 		if commitErr := tx.Commit(); commitErr != nil {
 			_ = tx.Rollback()
-			slog.Error("Error commit transaction", "error", commitErr)
+			b.logger.Error("Error commit transaction", "error", commitErr)
 			return false, commitErr
 		}
 	}
@@ -123,7 +231,7 @@ func (b *BookingRepository) GetByBookingInfo(ctx context.Context, bookingInfo *o
 	if !ok {
 		tx, err = b.db.BeginTx(ctx, nil)
 		if err != nil {
-			slog.Error("Error begin transaction", "error", err)
+			b.logger.Error("Error begin transaction", "error", err)
 			return nil, err
 		}
 
@@ -136,24 +244,24 @@ func (b *BookingRepository) GetByBookingInfo(ctx context.Context, bookingInfo *o
 		}()
 	}
 
-	query := `SELECT id, user_id, hotel_name, room_number, total_price, currency, check_in,
-                             check_out, status, created_at FROM bookings WHERE user_id = $1 AND hotel_name = $2 AND room_number = $3 AND check_in = $4 AND check_out = $5`
+	query := `SELECT id, user_id, hotel_id, room_number, total_price, currency, check_in,
+                             check_out, status, payment_id FROM bookings WHERE user_id = $1 AND hotel_id = $2 AND room_number = $3 AND check_in = $4 AND check_out = $5`
 
 	var id string
 	booking := &bookingdomain.Booking{}
-	execErr := tx.QueryRowContext(ctx, query, bookingInfo.UserID, bookingInfo.HotelName, bookingInfo.RoomNumber, bookingInfo.CheckIn, bookingInfo.CheckOut).Scan(&id, &booking.UserID, &booking.HotelName, &booking.RoomNumber, &booking.TotalPrice,
-		&booking.Currency, &booking.CheckIn, &booking.CheckOut, &booking.Status)
+	execErr := tx.QueryRowContext(ctx, query, bookingInfo.User.ID, bookingInfo.HotelID, bookingInfo.RoomNumber, bookingInfo.CheckIn, bookingInfo.CheckOut).Scan(&id, &booking.UserID, &booking.HotelID, &booking.RoomNumber, &booking.TotalPrice,
+		&booking.Currency, &booking.CheckIn, &booking.CheckOut, &booking.Status, &booking.PaymentID)
 
 	if errors.Is(execErr, sql.ErrNoRows) {
 		return nil, error2.ErrBookingIsNotFound
 	} else if execErr != nil {
-		slog.Error("Error getting booking", "error", execErr)
+		b.logger.Error("Error getting booking", "error", execErr)
 		return nil, err
 	}
 
 	bookingID, idErr := object.NewBookingID(id)
 	if idErr != nil {
-		slog.Error("Error getting id", "error", idErr)
+		b.logger.Error("Error getting id", "error", idErr)
 		return nil, err
 	}
 
@@ -162,7 +270,7 @@ func (b *BookingRepository) GetByBookingInfo(ctx context.Context, bookingInfo *o
 	if !ok {
 		if commitErr := tx.Commit(); commitErr != nil {
 			_ = tx.Rollback()
-			slog.Error("Error commit transaction", "error", commitErr)
+			b.logger.Error("Error commit transaction", "error", commitErr)
 			return nil, commitErr
 		}
 	}
@@ -170,30 +278,32 @@ func (b *BookingRepository) GetByBookingInfo(ctx context.Context, bookingInfo *o
 	return booking, nil
 }
 
-func (b *BookingRepository) GetByHotel(ctx context.Context, hotelName string) ([]*bookingdomain.Booking, error) {
+func (b *BookingRepository) GetByHotel(ctx context.Context, hotelID int64) ([]*bookingdomain.Booking, error) {
 	var err error
-	tx, err := b.db.BeginTx(ctx, nil)
-
-	defer func() {
+	tx, ok := transactionmanager.GetTxFromCtx(ctx)
+	if !ok {
+		tx, err = b.db.BeginTx(ctx, nil)
 		if err != nil {
-			if err2 := tx.Rollback(); err2 != nil {
-				slog.Error("Error rollback", "error", err2)
-			}
+			b.logger.Error("Error begin transaction", "error", err)
+			return nil, err
 		}
-	}()
 
-	if err != nil {
-		slog.Error("Error begin transaction", "error", err)
-		return nil, err
+		defer func() {
+			if err != nil {
+				if err2 := tx.Rollback(); err2 != nil {
+					slog.Error("Error rollback", "error", err2)
+				}
+			}
+		}()
 	}
 
-	query := `SELECT id, user_id, hotel_name, room_number, total_price, currency, check_in, check_out, status FROM bookings 
-WHERE hotel_name = $1`
+	query := `SELECT id, user_id, hotel_id, room_number, total_price, currency, check_in, check_out, status, payment_id FROM bookings 
+WHERE hotel_id = $1`
 	bookings := make([]*bookingdomain.Booking, 0)
-	rows, err := tx.QueryContext(ctx, query, hotelName)
+	rows, err := tx.QueryContext(ctx, query, hotelID)
 
 	if err != nil {
-		slog.Error("Error getting booking", "error", err)
+		b.logger.Error("Error getting booking", "error", err)
 		return nil, err
 	}
 
@@ -201,14 +311,14 @@ WHERE hotel_name = $1`
 	for rows.Next() {
 		var id string
 		booking := &bookingdomain.Booking{}
-		err = rows.Scan(&id, &booking.UserID, &booking.HotelName, &booking.RoomNumber, &booking.TotalPrice, &booking.Currency, &booking.CheckIn, &booking.CheckOut, &booking.Status)
+		err = rows.Scan(&id, &booking.UserID, &booking.HotelID, &booking.RoomNumber, &booking.TotalPrice, &booking.Currency, &booking.CheckIn, &booking.CheckOut, &booking.Status, &booking.PaymentID)
 		if err != nil {
-			slog.Error("Error getting booking", "error", err)
+			b.logger.Error("Error getting booking", "error", err)
 			return nil, err
 		}
 		bookingID, idErr := object.NewBookingID(id)
 		if idErr != nil {
-			slog.Error("Error getting id", "error", idErr)
+			b.logger.Error("Error getting id", "error", idErr)
 			err = idErr
 			return nil, err
 		}
@@ -218,14 +328,16 @@ WHERE hotel_name = $1`
 
 	err = rows.Err()
 	if err != nil {
-		slog.Error("Error getting bookings", "error", err)
+		b.logger.Error("Error getting bookings", "error", err)
 		return nil, err
 	}
 
-	if commitErr := tx.Commit(); commitErr != nil {
-		_ = tx.Rollback()
-		slog.Error("Error commit transaction", "error", commitErr)
-		return nil, commitErr
+	if !ok {
+		if commitErr := tx.Commit(); commitErr != nil {
+			_ = tx.Rollback()
+			b.logger.Error("Error commit transaction", "error", commitErr)
+			return nil, commitErr
+		}
 	}
 
 	return bookings, nil
@@ -233,26 +345,29 @@ WHERE hotel_name = $1`
 
 func (b *BookingRepository) GetByUser(ctx context.Context, userID string) ([]*bookingdomain.Booking, error) {
 	var err error
-	tx, err := b.db.BeginTx(ctx, nil)
-	if err != nil {
-		slog.Error("Error begin transaction", "error", err)
-		return nil, err
+	tx, ok := transactionmanager.GetTxFromCtx(ctx)
+	if !ok {
+		tx, err = b.db.BeginTx(ctx, nil)
+		if err != nil {
+			b.logger.Error("Error begin transaction", "error", err)
+			return nil, err
+		}
+
+		defer func() {
+			if err != nil {
+				if err2 := tx.Rollback(); err2 != nil {
+					slog.Error("Error rollback", "error", err2)
+				}
+			}
+		}()
 	}
 
-	defer func() {
-		if err != nil {
-			if err2 := tx.Rollback(); err2 != nil {
-				slog.Error("Error rollback", "error", err2)
-			}
-		}
-	}()
-
-	query := `SELECT id, user_id, hotel_name, room_number, total_price, currency, check_in, check_out, status FROM bookings
+	query := `SELECT id, user_id, hotel_id, room_number, total_price, currency, check_in, check_out, status, payment_id FROM bookings
 WHERE user_id = $1`
 	bookings := make([]*bookingdomain.Booking, 0)
 	rows, err := tx.QueryContext(ctx, query, userID)
 	if err != nil {
-		slog.Error("Error getting booking", "error", err)
+		b.logger.Error("Error getting booking", "error", err)
 		return nil, err
 	}
 
@@ -261,15 +376,15 @@ WHERE user_id = $1`
 	for rows.Next() {
 		var id string
 		booking := &bookingdomain.Booking{}
-		err = rows.Scan(ctx, query, &id, &booking.UserID, &booking.HotelName, &booking.RoomNumber, &booking.TotalPrice, &booking.Currency, &booking.CheckIn, &booking.CheckOut, &booking.Status)
+		err = rows.Scan(&id, &booking.UserID, &booking.HotelID, &booking.RoomNumber, &booking.TotalPrice, &booking.Currency, &booking.CheckIn, &booking.CheckOut, &booking.Status, &booking.PaymentID)
 		if err != nil {
-			slog.Error("Error getting booking", "error", err)
+			b.logger.Error("Error getting booking", "error", err)
 			return nil, err
 		}
 
 		bookingID, idErr := object.NewBookingID(id)
 		if idErr != nil {
-			slog.Error("Error getting id", "error", idErr)
+			b.logger.Error("Error getting id", "error", idErr)
 			err = idErr
 			return nil, err
 		}
@@ -281,14 +396,84 @@ WHERE user_id = $1`
 
 	err = rows.Err()
 	if err != nil {
-		slog.Error("Error getting bookings", "error", err)
+		b.logger.Error("Error getting bookings", "error", err)
 		return nil, err
 	}
 
-	if commitErr := tx.Commit(); commitErr != nil {
-		_ = tx.Rollback()
-		slog.Error("Error commit transaction", "error", commitErr)
-		return nil, commitErr
+	if !ok {
+		if commitErr := tx.Commit(); commitErr != nil {
+			_ = tx.Rollback()
+			b.logger.Error("Error commit transaction", "error", commitErr)
+			return nil, commitErr
+		}
+	}
+
+	return bookings, nil
+}
+
+func (b *BookingRepository) GetBookingsByStatus(ctx context.Context, status bookingdomain.BookingStatus) ([]*bookingdomain.Booking, error) {
+	var err error
+	tx, ok := transactionmanager.GetTxFromCtx(ctx)
+	if !ok {
+		tx, err = b.db.BeginTx(ctx, nil)
+		if err != nil {
+			b.logger.Error("Error begin transaction", "error", err)
+			return nil, err
+		}
+
+		defer func() {
+			if err != nil {
+				if err2 := tx.Rollback(); err2 != nil {
+					slog.Error("Error rollback", "error", err2)
+				}
+			}
+		}()
+	}
+
+	query := `SELECT id, user_id, hotel_id, room_number, total_price, currency, check_in, check_out, status, payment_id FROM bookings
+WHERE status = $1 AND NOW() - created_at < INTERVAL '6 hour'`
+
+	bookings := make([]*bookingdomain.Booking, 0)
+	rows, err := tx.QueryContext(ctx, query, string(status))
+	if err != nil {
+		b.logger.Error("Error getting bookings", "error", err)
+		return nil, err
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		booking := &bookingdomain.Booking{}
+		err = rows.Scan(&id, &booking.UserID, &booking.HotelID, &booking.RoomNumber, &booking.TotalPrice, &booking.Currency, &booking.CheckIn, &booking.CheckOut, &booking.Status, &booking.PaymentID)
+		if err != nil {
+			b.logger.Error("Error getting booking", "error", err)
+			return nil, err
+		}
+
+		bookingID, idErr := object.NewBookingID(id)
+		if idErr != nil {
+			b.logger.Error("Error getting id", "error", idErr)
+			err = idErr
+			return nil, err
+		}
+
+		booking.ID = bookingID
+
+		bookings = append(bookings, booking)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		b.logger.Error("Error getting bookings", "error", err)
+		return nil, err
+	}
+
+	if !ok {
+		if commitErr := tx.Commit(); commitErr != nil {
+			_ = tx.Rollback()
+			b.logger.Error("Error commit transaction", "error", commitErr)
+			return nil, commitErr
+		}
 	}
 
 	return bookings, nil

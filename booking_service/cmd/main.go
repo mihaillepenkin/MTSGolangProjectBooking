@@ -13,7 +13,7 @@ func main() {
 		return
 	}
 
-	err = application.Start()
+	err = application.Run()
 	if err != nil {
 		slog.Error("Error starting application", "error", err)
 	}

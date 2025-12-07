@@ -1,11 +1,15 @@
 package object
 
-import "time"
+import (
+	"time"
+
+	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/user"
+)
 
 type BookingInfo struct {
-	UserID     string
-	HotelName  string
-	RoomNumber string
-	CheckIn    time.Time
-	CheckOut   time.Time
+	User       user.User `json:"user"`
+	HotelID    int64     `json:"hotel_id"`
+	RoomNumber int64     `json:"room_number"`
+	CheckIn    time.Time `json:"check_in"`
+	CheckOut   time.Time `json:"check_out"`
 }

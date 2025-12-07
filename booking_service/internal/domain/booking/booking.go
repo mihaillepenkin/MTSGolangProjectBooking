@@ -3,8 +3,8 @@ package booking
 import (
 	"time"
 
+	error2 "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/booking/error"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/booking/object"
-	error2 "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/error"
 )
 
 type BookingStatus string
@@ -28,11 +28,12 @@ func ValidateAndGetBookingStatus(status string) (BookingStatus, error) {
 type Booking struct {
 	ID         object.BookingID
 	UserID     string
-	HotelName  string
-	RoomNumber string
+	HotelID    int64
+	RoomNumber int64
 	TotalPrice float64
 	Currency   string
 	CheckIn    time.Time
 	CheckOut   time.Time
 	Status     BookingStatus
+	PaymentID  string
 }

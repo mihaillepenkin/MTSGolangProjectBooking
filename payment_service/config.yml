@@ -1,0 +1,7 @@
+secret_key: "secret"
+http:
+  address: ":8083"
+  host: "localhost"
+  port: "8083"
+  allowed_origins: ["http://localhost:8080"]
+  read_timeout: "10s"

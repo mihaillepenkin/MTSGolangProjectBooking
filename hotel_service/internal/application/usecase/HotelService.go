@@ -37,8 +37,20 @@ func (hs *HotelService) GetAllHotels() (response.AllHotelsInfoResponseDto, error
 	return response.AllHotelsInfoResponseDto{Hotels: result, Message: "", Error: ""}, nil
 }
 
-func (hs *HotelService) AddHotelInfo(hotelInfo *request.HotelInfoAdditionRequestDto) (response.HotelInfoResponseDto, error) {
-	hotel, err := hs.hotelRepository.AddHotelInfo(hotelInfo.Name, hotelInfo.Location, hotelInfo.OwnerId, hotelInfo.Rooms)
+func (hs *HotelService) AddHotelInfo(hotelInfo *request.HotelInfoAdditionRequestDto, userId int64) (response.HotelInfoResponseDto, error) {
+	if userId != hotelInfo.OwnerId {
+		return response.HotelInfoResponseDto{Message: "Ошибка при добавлении информации об отеле", Error: "403"}, errors.New("user is not hotel owner")
+	}
+	err := hs.hotelRepository.CheckIfHotelExists(hotelInfo.Name, hotelInfo.Location)
+	if err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			return response.HotelInfoResponseDto{Message: "Ошибка при добавлении информации об отеле", Error: "409"}, errors.New("hotel info already exists")
+		}
+		slog.Error("Ошибка в HotelRepository, метод CheckIfHotelExists: " + err.Error())
+		return response.HotelInfoResponseDto{Message: "Ошибка при добавлении информации об отеле", Error: "500"}, errors.New("ошибка в ходе работы с БД в репозитории")
+	}
+
+	hotel, err := hs.hotelRepository.AddHotelInfo(hotelInfo.Name, hotelInfo.Description, hotelInfo.Location, hotelInfo.OwnerId, hotelInfo.Rooms)
 	if err != nil {
 		slog.Error("Ошибка в HotelRepository, метод AddHotelInfo: " + err.Error())
 		return response.HotelInfoResponseDto{Message: "Ошибка при добавлении информации об отеле", Error: "500"}, errors.New("ошибка в ходе работы с БД в репозитории")
@@ -52,8 +64,17 @@ func (hs *HotelService) AddHotelInfo(hotelInfo *request.HotelInfoAdditionRequest
 	return response.HotelInfoResponseDto{Id: hotel.Id, Name: hotel.Name, Location: hotel.Location, OwnerId: hotel.OwnerId, Rooms: rooms, Message: "", Error: ""}, nil
 }
 
-func (hs *HotelService) UpdateHotelInfo(newHotelInfo *request.HotelInfoUpdateRequestDto) (response.HotelInfoResponseDto, error) {
-	hotelUpd, err := hs.hotelRepository.UpdateHotelInfo(newHotelInfo.Id, newHotelInfo.NewName, newHotelInfo.NewLocation, newHotelInfo.NewOwnerId, newHotelInfo.NewRooms)
+func (hs *HotelService) UpdateHotelInfo(newHotelInfo *request.HotelInfoUpdateRequestDto, userId int64) (response.HotelInfoResponseDto, error) {
+	err := hs.hotelRepository.CheckHotelOwner(newHotelInfo.Id, userId)
+	if err != nil {
+		if err.Error() != "user is not hotel owner" {
+			slog.Error("Ошибка в HotelRepository, метод CheckHotelOwner: " + err.Error())
+			return response.HotelInfoResponseDto{Message: "Ошибка при обновлении информации об отеле", Error: "500"}, errors.New("ошибка в ходе работы с БД в репозитории")
+		}
+		return response.HotelInfoResponseDto{Message: "Ошибка при обновлении информации об отеле", Error: "403"}, err
+	}
+
+	hotelUpd, err := hs.hotelRepository.UpdateHotelInfo(newHotelInfo.Id, newHotelInfo.NewName, newHotelInfo.NewDescription, newHotelInfo.NewLocation, newHotelInfo.NewOwnerId, newHotelInfo.NewRooms)
 	if err != nil {
 		slog.Error("Ошибка в HotelRepository, метод UpdateHotelInfo: " + err.Error())
 		return response.HotelInfoResponseDto{Message: "Ошибка при обновлении информации об отеле", Error: "500"}, errors.New("ошибка в ходе работы с БД в репозитории")
@@ -65,8 +86,4 @@ func (hs *HotelService) UpdateHotelInfo(newHotelInfo *request.HotelInfoUpdateReq
 	}
 
 	return response.HotelInfoResponseDto{Id: hotelUpd.Id, Name: hotelUpd.Name, Location: hotelUpd.Location, OwnerId: hotelUpd.OwnerId, Rooms: roomsUpd, Message: "", Error: ""}, nil
-}
-
-func (hs *HotelService) GetHotelById(id int64) (response.HotelInfoResponseDto, error) {
-	return response.HotelInfoResponseDto{}, nil
 }

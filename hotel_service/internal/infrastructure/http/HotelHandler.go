@@ -7,7 +7,6 @@ import (
 	"hotel_service/internal/application/usecase"
 	"log/slog"
 	"net/http"
-	"strconv"
 )
 
 type HotelHandler struct {
@@ -47,13 +46,17 @@ func (hh *HotelHandler) AddHotelInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := hh.hotelService.AddHotelInfo(&body)
+	value := r.Context().Value("claims")
+	claims := value.(*JWTClaims)
+	res, err := hh.hotelService.AddHotelInfo(&body, claims.UserId)
 	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		slog.Error("Ошибка в HotelService, метод AddHotelInfo: " + err.Error())
 		switch res.Error {
 		case "500":
 			w.WriteHeader(http.StatusInternalServerError)
+		case "409":
+			w.WriteHeader(http.StatusConflict)
 		}
 	} else {
 		w.WriteHeader(http.StatusCreated)
@@ -74,13 +77,17 @@ func (hh *HotelHandler) UpdateHotelInfo(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	res, err := hh.hotelService.UpdateHotelInfo(&body)
+	value := r.Context().Value("claims")
+	claims := value.(*JWTClaims)
+	res, err := hh.hotelService.UpdateHotelInfo(&body, claims.UserId)
 	w.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		slog.Error("Ошибка в HotelService, метод UpdateHotelInfo: " + err.Error())
 		switch res.Error {
 		case "500":
 			w.WriteHeader(http.StatusInternalServerError)
+		case "403":
+			w.WriteHeader(http.StatusForbidden)
 		}
 	} else {
 		w.WriteHeader(http.StatusOK)
@@ -88,35 +95,6 @@ func (hh *HotelHandler) UpdateHotelInfo(w http.ResponseWriter, r *http.Request) 
 	err = json.NewEncoder(w).Encode(res)
 	if err != nil {
 		slog.Error("Ошибка в HotelHandler, метод UpdateHotelInfo: " + err.Error())
-		return
-	}
-}
-
-func (hh *HotelHandler) GetHotelById(w http.ResponseWriter, r *http.Request) {
-	id := r.PathValue("id")
-	hotelId, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		slog.Error(err.Error())
-		http.Error(w, "Некорректный ID отеля", http.StatusBadRequest)
-		return
-	}
-
-	res, err := hh.hotelService.GetHotelById(hotelId)
-	w.Header().Set("Content-Type", "application/json")
-	if err != nil {
-		slog.Error(err.Error())
-		switch res.Error {
-		case "418":
-			w.WriteHeader(http.StatusTeapot)
-		case "502":
-			w.WriteHeader(http.StatusBadGateway)
-		}
-	} else {
-		w.WriteHeader(http.StatusOK)
-	}
-	err = json.NewEncoder(w).Encode(res)
-	if err != nil {
-		slog.Error(err.Error())
 		return
 	}
 }

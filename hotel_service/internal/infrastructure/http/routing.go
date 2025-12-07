@@ -11,7 +11,5 @@ func CreateRouting(hotelHandler *HotelHandler) *http.ServeMux {
 
 	mux.HandleFunc("PUT /api/v1/hotels", hotelHandler.UpdateHotelInfo)
 
-	mux.HandleFunc("GET /api/v1/hotels/{id}", hotelHandler.GetHotelById)
-
 	return mux
 }

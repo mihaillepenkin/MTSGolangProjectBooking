@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS hotels;
+
+DROP TABLE IF EXISTS rooms;

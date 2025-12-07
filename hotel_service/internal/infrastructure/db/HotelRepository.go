@@ -16,6 +16,63 @@ func (hr *HotelRepository) Initialize(db *sql.DB) {
 	hr.Db = db
 }
 
+func (hr *HotelRepository) CheckIfHotelExists(hotelName string, hotelLocation string) error {
+	tx, err := hr.Db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func(tx *sql.Tx) {
+		err := tx.Rollback()
+		if err != nil {
+			slog.Error(err.Error())
+		}
+	}(tx)
+
+	row := tx.QueryRow("SELECT name, location FROM hotels WHERE name = $1 AND location = $2", hotelName, hotelLocation)
+	var name string
+	var location string
+	err = row.Scan(&name, &location)
+	if err != nil {
+		return err
+	}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (hr *HotelRepository) CheckHotelOwner(hotelId int64, userId int64) error {
+	tx, err := hr.Db.Begin()
+	if err != nil {
+		return err
+	}
+	defer func(tx *sql.Tx) {
+		err := tx.Rollback()
+		if err != nil {
+			slog.Error(err.Error())
+		}
+	}(tx)
+
+	row := tx.QueryRow("SELECT owner_id FROM hotels WHERE id = $1", hotelId)
+	var ownerId int64
+	err = row.Scan(&ownerId)
+	if err != nil {
+		return err
+	}
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
+	if ownerId != userId {
+		return errors.New("user is not hotel owner")
+	}
+
+	return nil
+}
+
 func (hr *HotelRepository) GetAllHotels() ([]entity.Hotel, error) {
 	tx, err := hr.Db.Begin()
 	if err != nil {
@@ -29,13 +86,13 @@ func (hr *HotelRepository) GetAllHotels() ([]entity.Hotel, error) {
 	}(tx)
 
 	hotels := make([]entity.Hotel, 0)
-	rows, err := tx.Query("SELECT id, name, location, owner_id FROM hotels")
+	rows, err := tx.Query("SELECT id, name, description, location, owner_id FROM hotels")
 	if err != nil {
 		return nil, err
 	}
 	for rows.Next() {
 		var hotel entity.Hotel
-		err := rows.Scan(&hotel.Id, &hotel.Name, &hotel.Location, &hotel.OwnerId)
+		err := rows.Scan(&hotel.Id, &hotel.Name, &hotel.Description, &hotel.Location, &hotel.OwnerId)
 		if err != nil {
 			return nil, err
 		}
@@ -67,7 +124,7 @@ func (hr *HotelRepository) GetAllHotels() ([]entity.Hotel, error) {
 	return hotels, nil
 }
 
-func (hr *HotelRepository) AddHotelInfo(name string, location string, ownerId int64, rooms []request.Room) (entity.Hotel, error) {
+func (hr *HotelRepository) AddHotelInfo(name string, description string, location string, ownerId int64, rooms []request.Room) (entity.Hotel, error) {
 	tx, err := hr.Db.Begin()
 	if err != nil {
 		return entity.Hotel{}, err
@@ -79,8 +136,8 @@ func (hr *HotelRepository) AddHotelInfo(name string, location string, ownerId in
 		}
 	}(tx)
 
-	hotel := entity.Hotel{Name: name, Location: location, OwnerId: ownerId}
-	result, err := tx.Exec("INSERT INTO hotels (name, location, owner_id) VALUES ($1, $2, $3)", hotel.Name, hotel.Location, hotel.OwnerId)
+	hotel := entity.Hotel{Name: name, Description: description, Location: location, OwnerId: ownerId}
+	result, err := tx.Exec("INSERT INTO hotels (name, description, location, owner_id) VALUES ($1, $2, $3, $4)", hotel.Name, hotel.Description, hotel.Location, hotel.OwnerId)
 	if err != nil {
 		return entity.Hotel{}, err
 	}
@@ -112,7 +169,7 @@ func (hr *HotelRepository) AddHotelInfo(name string, location string, ownerId in
 	return hotel, nil
 }
 
-func (hr *HotelRepository) UpdateHotelInfo(id int64, newName string, newLocation string, newOwnerId int64, newRooms []request.RoomUpd) (entity.Hotel, error) {
+func (hr *HotelRepository) UpdateHotelInfo(id int64, newName string, newDescription string, newLocation string, newOwnerId int64, newRooms []request.RoomUpd) (entity.Hotel, error) {
 	tx, err := hr.Db.Begin()
 	if err != nil {
 		return entity.Hotel{}, err
@@ -124,8 +181,8 @@ func (hr *HotelRepository) UpdateHotelInfo(id int64, newName string, newLocation
 		}
 	}(tx)
 
-	hotel := entity.Hotel{Id: id, Name: newName, Location: newLocation, OwnerId: newOwnerId}
-	_, err = tx.Exec("UPDATE hotels SET name=$1, location=$2, owner_id=$3 WHERE id=$4", hotel.Name, hotel.Location, hotel.OwnerId, hotel.Id)
+	hotel := entity.Hotel{Id: id, Name: newName, Description: newDescription, Location: newLocation, OwnerId: newOwnerId}
+	_, err = tx.Exec("UPDATE hotels SET name=$1, description=$2, location=$3, owner_id=$4 WHERE id=$5", hotel.Name, hotel.Description, hotel.Location, hotel.OwnerId, hotel.Id)
 	if err != nil {
 		return entity.Hotel{}, err
 	}
@@ -147,8 +204,4 @@ func (hr *HotelRepository) UpdateHotelInfo(id int64, newName string, newLocation
 	}
 
 	return hotel, nil
-}
-
-func (hr *HotelRepository) GetHotelById(id int64) (entity.Hotel, error) {
-	return entity.Hotel{}, errors.New("not implemented")
 }

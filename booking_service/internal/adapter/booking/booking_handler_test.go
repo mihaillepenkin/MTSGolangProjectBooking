@@ -31,7 +31,7 @@ var (
 )
 
 const (
-	BookingPrefix            = "/booking"
+	BookingPrefix            = "/postgres"
 	BookRoomEndpoint         = BookingPrefix
 	GetHotelBookingsEndpoint = BookingPrefix + "/bookings" + "/hotelier"
 	GetUserBookingsEndpoint  = BookingPrefix + "/client"
@@ -49,7 +49,7 @@ func (m *MockBookingSaver) BookRoom(ctx context.Context, bookingInfo *object.Boo
 		return "", error2.ErrBookingIsIntersected
 	}
 
-	if bookingInfo.HotelID != testHotelID || bookingInfo.RoomNumber != testRoomNumber {
+	if bookingInfo.HotelID != testHotelID || bookingInfo.RoomID != testRoomNumber {
 		return "", error3.ErrHotelRoomIsNotFound
 	}
 
@@ -117,22 +117,22 @@ func TestBookingHandler_BookRoom(t *testing.T) {
 	}{
 		{
 			name:           "Invalid duration",
-			request:        request.BookRoomRequest{HotelID: testHotelID, RoomNumber: testRoomNumber, CheckIn: time.Date(2025, 10, 11, 0, 0, 0, 0, time.UTC), CheckOut: time.Date(2025, 10, 10, 0, 0, 0, 0, time.UTC)},
+			request:        request.BookRoomRequest{HotelID: testHotelID, RoomID: testRoomNumber, CheckIn: time.Date(2025, 10, 11, 0, 0, 0, 0, time.UTC), CheckOut: time.Date(2025, 10, 10, 0, 0, 0, 0, time.UTC)},
 			expectedStatus: http.StatusBadRequest,
 		},
 		{
 			name:           "Invalid intersected duration",
-			request:        request.BookRoomRequest{HotelID: testHotelID, RoomNumber: testRoomNumber, CheckIn: time.Date(2025, 10, 11, 0, 0, 0, 0, time.UTC), CheckOut: time.Date(2025, 10, 12, 0, 0, 0, 0, time.UTC)},
+			request:        request.BookRoomRequest{HotelID: testHotelID, RoomID: testRoomNumber, CheckIn: time.Date(2025, 10, 11, 0, 0, 0, 0, time.UTC), CheckOut: time.Date(2025, 10, 12, 0, 0, 0, 0, time.UTC)},
 			expectedStatus: http.StatusConflict,
 		},
 		{
 			name:           "Hotel room is not found",
-			request:        request.BookRoomRequest{HotelID: testHotelID, RoomNumber: 2, CheckIn: testDurations[0], CheckOut: testDurations[1]},
+			request:        request.BookRoomRequest{HotelID: testHotelID, RoomID: 2, CheckIn: testDurations[0], CheckOut: testDurations[1]},
 			expectedStatus: http.StatusNotFound,
 		},
 		{
 			name:           "Hotel room is found",
-			request:        request.BookRoomRequest{HotelID: testHotelID, RoomNumber: testRoomNumber, CheckIn: testDurations[0], CheckOut: testDurations[1]},
+			request:        request.BookRoomRequest{HotelID: testHotelID, RoomID: testRoomNumber, CheckIn: testDurations[0], CheckOut: testDurations[1]},
 			expectedStatus: http.StatusOK,
 		},
 	}

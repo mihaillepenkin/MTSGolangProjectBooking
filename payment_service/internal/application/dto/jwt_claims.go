@@ -6,6 +6,6 @@ import (
 )
 
 type JWTClaims struct {
-	Payment *payment.Payment `json:"payment"`
+	Payment *payment.Payment `json:"http"`
 	jwt.RegisteredClaims
 }

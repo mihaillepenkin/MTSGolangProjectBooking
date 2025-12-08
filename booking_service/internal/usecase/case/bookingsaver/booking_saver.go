@@ -32,9 +32,9 @@ func (b *BookingSaver) BookRoom(ctx context.Context, bookingInfo *object.Booking
 	}
 
 	return b.txManager.InTransaction(ctx, func(ctx context.Context) (string, error) {
-		isIntersected, err := b.bookingRepo.IsIntersected(ctx, bookingInfo.HotelID, bookingInfo.RoomNumber, bookingInfo.CheckIn, bookingInfo.CheckOut)
+		isIntersected, err := b.bookingRepo.IsIntersected(ctx, bookingInfo.HotelID, bookingInfo.RoomID, bookingInfo.CheckIn, bookingInfo.CheckOut)
 		if err != nil {
-			b.logger.Error("Error while checking intersected booking", "error", err)
+			b.logger.Error("Error while checking intersected postgres", "error", err)
 			return "", err
 		}
 
@@ -42,19 +42,22 @@ func (b *BookingSaver) BookRoom(ctx context.Context, bookingInfo *object.Booking
 			return "", error2.ErrBookingIsIntersected
 		}
 
-		roomInfo, err := b.hotelRepo.GetRoomInfo(ctx, bookingInfo.HotelID, bookingInfo.RoomNumber)
+		roomInfo, err := b.hotelRepo.GetRoomInfo(ctx, bookingInfo.HotelID, bookingInfo.RoomID)
 		if err != nil {
 			b.logger.Error("Error while getting room info", "error", err)
 			return "", err
 		}
+
+		bookingInfo.HotelName = roomInfo.HotelName
+		bookingInfo.RoomNumber = roomInfo.RoomNumber
 
 		days := int64(bookingInfo.CheckOut.Sub(bookingInfo.CheckIn).Hours() / 24)
 
 		booking := &bookingdomain.Booking{
 			UserID:     bookingInfo.User.ID,
 			HotelID:    bookingInfo.HotelID,
-			RoomNumber: bookingInfo.RoomNumber,
-			TotalPrice: float64(days * roomInfo.Amount),
+			RoomID:     bookingInfo.RoomID,
+			TotalPrice: float64(int32(days) * roomInfo.Amount),
 			Currency:   roomInfo.Currency,
 			CheckIn:    bookingInfo.CheckIn,
 			CheckOut:   bookingInfo.CheckOut,
@@ -64,7 +67,7 @@ func (b *BookingSaver) BookRoom(ctx context.Context, bookingInfo *object.Booking
 		paymentInfo := &payment.PaymentInfo{BookingInfo: *bookingInfo, Price: booking.TotalPrice, Currency: roomInfo.Currency, URL: b.webhookHandlerURL}
 		response, err := b.paymentSender.SendPayment(ctx, paymentInfo)
 		if err != nil {
-			b.logger.Error("Error while sending payment", "error", err)
+			b.logger.Error("Error while sending http", "error", err)
 			return "", err
 		}
 
@@ -72,7 +75,7 @@ func (b *BookingSaver) BookRoom(ctx context.Context, bookingInfo *object.Booking
 
 		err = b.bookingRepo.Save(ctx, booking)
 		if err != nil {
-			b.logger.Error("Error while saving booking", "error", err)
+			b.logger.Error("Error while saving postgres", "error", err)
 			return "", err
 		}
 
@@ -84,13 +87,13 @@ func (b *BookingSaver) DeleteBooking(ctx context.Context, bookingInfo *object.Bo
 	_, err := b.txManager.InTransaction(ctx, func(ctx context.Context) (string, error) {
 		booking, err := b.bookingRepo.GetByBookingInfo(ctx, bookingInfo)
 		if err != nil {
-			b.logger.Error("Error while getting booking", "error", err)
+			b.logger.Error("Error while getting postgres", "error", err)
 			return "", err
 		}
 
 		err = b.bookingRepo.Delete(ctx, booking)
 		if err != nil {
-			b.logger.Error("Error while deleting booking", "error", err)
+			b.logger.Error("Error while deleting postgres", "error", err)
 			return "", err
 		}
 
@@ -103,14 +106,14 @@ func (b *BookingSaver) ConfirmBooking(ctx context.Context, bookingInfo *object.B
 	_, err := b.txManager.InTransaction(ctx, func(ctx context.Context) (string, error) {
 		booking, err := b.bookingRepo.GetByBookingInfo(ctx, bookingInfo)
 		if err != nil {
-			b.logger.Error("Error while getting booking", "error", err)
+			b.logger.Error("Error while getting postgres", "error", err)
 			return "", err
 		}
 
 		booking.Status = bookingdomain.BookingStatusPaid
 		err = b.bookingRepo.Save(ctx, booking)
 		if err != nil {
-			b.logger.Error("Error while saving booking", "error", err)
+			b.logger.Error("Error while saving postgres", "error", err)
 			return "", err
 		}
 
@@ -118,7 +121,7 @@ func (b *BookingSaver) ConfirmBooking(ctx context.Context, bookingInfo *object.B
 	})
 
 	if err != nil {
-		b.logger.Error("Error while saving booking", "error", err)
+		b.logger.Error("Error while saving postgres", "error", err)
 		return err
 	}
 

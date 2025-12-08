@@ -36,7 +36,7 @@ func (j *JwtService) ValidateToken(ctx context.Context, token string) (*userdoma
 	}
 
 	if claims, ok := jwtToken.Claims.(*jwtclaims.JWTClaims); ok && jwtToken.Valid {
-		user := &userdomain.User{ID: claims.UserID, Email: claims.Email, Role: claims.Role}
+		user := &userdomain.User{ID: claims.UserID, Email: claims.Email, Role: claims.Role, Name: claims.Name}
 		err = userdomain.ValidateUser(user)
 		if err != nil {
 			j.logger.Error("user is incorrect", "error", err)

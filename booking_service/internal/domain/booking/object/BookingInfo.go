@@ -9,7 +9,9 @@ import (
 type BookingInfo struct {
 	User       user.User `json:"user"`
 	HotelID    int64     `json:"hotel_id"`
-	RoomNumber int64     `json:"room_number"`
+	RoomID     int64     `json:"room_id"`
 	CheckIn    time.Time `json:"check_in"`
 	CheckOut   time.Time `json:"check_out"`
+	HotelName  string    `json:"hotel_name"`
+	RoomNumber int64     `json:"room_number"`
 }

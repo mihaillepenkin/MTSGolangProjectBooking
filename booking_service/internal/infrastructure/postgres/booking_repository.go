@@ -1,4 +1,4 @@
-package booking
+package postgres
 
 import (
 	"context"
@@ -40,15 +40,15 @@ func (b *BookingRepository) Save(ctx context.Context, booking *bookingdomain.Boo
 		}()
 	}
 
-	query := `INSERT INTO bookings (user_id, hotel_id, room_number, total_price, currency, check_in,
+	query := `INSERT INTO bookings (user_id, hotel_id, room_id, total_price, currency, check_in,
                              check_out, status, created_at, payment_id) VALUES 
                                                                 ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) 
-ON CONFLICT (user_id, hotel_id, room_number, check_in, check_out) DO UPDATE SET status = $8`
+ON CONFLICT (user_id, hotel_id, room_id, check_in, check_out) DO UPDATE SET status = $8`
 
-	result, execErr := tx.ExecContext(ctx, query, booking.UserID, booking.HotelID, booking.RoomNumber, booking.TotalPrice,
+	result, execErr := tx.ExecContext(ctx, query, booking.UserID, booking.HotelID, booking.RoomID, booking.TotalPrice,
 		booking.Currency, booking.CheckIn, booking.CheckOut, booking.Status, time.Now(), booking.PaymentID)
 	if execErr != nil {
-		b.logger.Error("Error saving booking", "error", execErr)
+		b.logger.Error("Error saving postgres", "error", execErr)
 		err = execErr
 		return err
 	}
@@ -93,12 +93,12 @@ func (b *BookingRepository) Delete(ctx context.Context, booking *bookingdomain.B
 		}()
 	}
 
-	query := `DELETE FROM bookings WHERE user_id = $1 AND hotel_id = $2 AND room_number = $3
+	query := `DELETE FROM bookings WHERE user_id = $1 AND hotel_id = $2 AND room_id = $3
               AND check_in = $4 AND check_out = $5`
-	result, execErr := tx.ExecContext(ctx, query, booking.UserID, booking.HotelID, booking.RoomNumber, booking.CheckIn, booking.CheckOut)
+	result, execErr := tx.ExecContext(ctx, query, booking.UserID, booking.HotelID, booking.RoomID, booking.CheckIn, booking.CheckOut)
 
 	if execErr != nil {
-		b.logger.Error("Error deleting booking", "error", execErr)
+		b.logger.Error("Error deleting postgres", "error", execErr)
 		err = execErr
 		return err
 	}
@@ -125,7 +125,7 @@ func (b *BookingRepository) Delete(ctx context.Context, booking *bookingdomain.B
 	return nil
 }
 
-func (b *BookingRepository) GetDurationsByRoom(ctx context.Context, hotelID int64, roomNumber int64) ([][]time.Time, error) {
+func (b *BookingRepository) GetDurationsByRoom(ctx context.Context, hotelID int64, roomID int64) ([][]time.Time, error) {
 	var err error
 	tx, ok := transactionmanager.GetTxFromCtx(ctx)
 	if !ok {
@@ -146,9 +146,9 @@ func (b *BookingRepository) GetDurationsByRoom(ctx context.Context, hotelID int6
 
 	query := `SELECT check_in, check_out
     FROM bookings
-    WHERE hotel_id = $1 AND room_number = $2 and status ='paid'`
+    WHERE hotel_id = $1 AND room_id = $2 and status ='paid'`
 
-	rows, err := tx.QueryContext(ctx, query, hotelID, roomNumber)
+	rows, err := tx.QueryContext(ctx, query, hotelID, roomID)
 	if err != nil {
 		b.logger.Error("Error querying bookings", "error", err)
 		return nil, err
@@ -182,7 +182,7 @@ func (b *BookingRepository) GetDurationsByRoom(ctx context.Context, hotelID int6
 	return durations, nil
 }
 
-func (b *BookingRepository) IsIntersected(ctx context.Context, hotelID int64, hotelRoom int64, checkIn time.Time, checkOut time.Time) (bool, error) {
+func (b *BookingRepository) IsIntersected(ctx context.Context, hotelID int64, roomID int64, checkIn time.Time, checkOut time.Time) (bool, error) {
 	var err error
 	tx, ok := transactionmanager.GetTxFromCtx(ctx)
 	if !ok {
@@ -203,14 +203,14 @@ func (b *BookingRepository) IsIntersected(ctx context.Context, hotelID int64, ho
 
 	query := `SELECT COUNT(*) FROM bookings
                 WHERE hotel_id = $1 
-                  AND room_number = $2
+                  AND room_id = $2
                   AND check_in < $4
                   AND check_out > $3`
 
 	var count int
-	execErr := tx.QueryRowContext(ctx, query, hotelID, hotelRoom, checkIn, checkOut).Scan(&count)
+	execErr := tx.QueryRowContext(ctx, query, hotelID, roomID, checkIn, checkOut).Scan(&count)
 	if execErr != nil {
-		b.logger.Error("Error checking booking", "error", execErr)
+		b.logger.Error("Error checking postgres", "error", execErr)
 		return false, execErr
 	}
 
@@ -244,18 +244,18 @@ func (b *BookingRepository) GetByBookingInfo(ctx context.Context, bookingInfo *o
 		}()
 	}
 
-	query := `SELECT id, user_id, hotel_id, room_number, total_price, currency, check_in,
-                             check_out, status, payment_id FROM bookings WHERE user_id = $1 AND hotel_id = $2 AND room_number = $3 AND check_in = $4 AND check_out = $5`
+	query := `SELECT id, user_id, hotel_id, room_id, total_price, currency, check_in,
+                             check_out, status, payment_id FROM bookings WHERE user_id = $1 AND hotel_id = $2 AND room_id = $3 AND check_in = $4 AND check_out = $5`
 
 	var id string
 	booking := &bookingdomain.Booking{}
-	execErr := tx.QueryRowContext(ctx, query, bookingInfo.User.ID, bookingInfo.HotelID, bookingInfo.RoomNumber, bookingInfo.CheckIn, bookingInfo.CheckOut).Scan(&id, &booking.UserID, &booking.HotelID, &booking.RoomNumber, &booking.TotalPrice,
+	execErr := tx.QueryRowContext(ctx, query, bookingInfo.User.ID, bookingInfo.HotelID, bookingInfo.RoomID, bookingInfo.CheckIn, bookingInfo.CheckOut).Scan(&id, &booking.UserID, &booking.HotelID, &booking.RoomID, &booking.TotalPrice,
 		&booking.Currency, &booking.CheckIn, &booking.CheckOut, &booking.Status, &booking.PaymentID)
 
 	if errors.Is(execErr, sql.ErrNoRows) {
 		return nil, error2.ErrBookingIsNotFound
 	} else if execErr != nil {
-		b.logger.Error("Error getting booking", "error", execErr)
+		b.logger.Error("Error getting postgres", "error", execErr)
 		return nil, err
 	}
 
@@ -297,13 +297,13 @@ func (b *BookingRepository) GetByHotel(ctx context.Context, hotelID int64) ([]*b
 		}()
 	}
 
-	query := `SELECT id, user_id, hotel_id, room_number, total_price, currency, check_in, check_out, status, payment_id FROM bookings 
+	query := `SELECT id, user_id, hotel_id, room_id, total_price, currency, check_in, check_out, status, payment_id FROM bookings 
 WHERE hotel_id = $1`
 	bookings := make([]*bookingdomain.Booking, 0)
 	rows, err := tx.QueryContext(ctx, query, hotelID)
 
 	if err != nil {
-		b.logger.Error("Error getting booking", "error", err)
+		b.logger.Error("Error getting postgres", "error", err)
 		return nil, err
 	}
 
@@ -311,9 +311,9 @@ WHERE hotel_id = $1`
 	for rows.Next() {
 		var id string
 		booking := &bookingdomain.Booking{}
-		err = rows.Scan(&id, &booking.UserID, &booking.HotelID, &booking.RoomNumber, &booking.TotalPrice, &booking.Currency, &booking.CheckIn, &booking.CheckOut, &booking.Status, &booking.PaymentID)
+		err = rows.Scan(&id, &booking.UserID, &booking.HotelID, &booking.RoomID, &booking.TotalPrice, &booking.Currency, &booking.CheckIn, &booking.CheckOut, &booking.Status, &booking.PaymentID)
 		if err != nil {
-			b.logger.Error("Error getting booking", "error", err)
+			b.logger.Error("Error getting postgres", "error", err)
 			return nil, err
 		}
 		bookingID, idErr := object.NewBookingID(id)
@@ -362,12 +362,12 @@ func (b *BookingRepository) GetByUser(ctx context.Context, userID string) ([]*bo
 		}()
 	}
 
-	query := `SELECT id, user_id, hotel_id, room_number, total_price, currency, check_in, check_out, status, payment_id FROM bookings
+	query := `SELECT id, user_id, hotel_id, room_id, total_price, currency, check_in, check_out, status, payment_id FROM bookings
 WHERE user_id = $1`
 	bookings := make([]*bookingdomain.Booking, 0)
 	rows, err := tx.QueryContext(ctx, query, userID)
 	if err != nil {
-		b.logger.Error("Error getting booking", "error", err)
+		b.logger.Error("Error getting postgres", "error", err)
 		return nil, err
 	}
 
@@ -376,9 +376,9 @@ WHERE user_id = $1`
 	for rows.Next() {
 		var id string
 		booking := &bookingdomain.Booking{}
-		err = rows.Scan(&id, &booking.UserID, &booking.HotelID, &booking.RoomNumber, &booking.TotalPrice, &booking.Currency, &booking.CheckIn, &booking.CheckOut, &booking.Status, &booking.PaymentID)
+		err = rows.Scan(&id, &booking.UserID, &booking.HotelID, &booking.RoomID, &booking.TotalPrice, &booking.Currency, &booking.CheckIn, &booking.CheckOut, &booking.Status, &booking.PaymentID)
 		if err != nil {
-			b.logger.Error("Error getting booking", "error", err)
+			b.logger.Error("Error getting postgres", "error", err)
 			return nil, err
 		}
 
@@ -430,7 +430,7 @@ func (b *BookingRepository) GetBookingsByStatus(ctx context.Context, status book
 		}()
 	}
 
-	query := `SELECT id, user_id, hotel_id, room_number, total_price, currency, check_in, check_out, status, payment_id FROM bookings
+	query := `SELECT id, user_id, hotel_id, room_id, total_price, currency, check_in, check_out, status, payment_id FROM bookings
 WHERE status = $1 AND NOW() - created_at < INTERVAL '6 hour'`
 
 	bookings := make([]*bookingdomain.Booking, 0)
@@ -444,9 +444,9 @@ WHERE status = $1 AND NOW() - created_at < INTERVAL '6 hour'`
 	for rows.Next() {
 		var id string
 		booking := &bookingdomain.Booking{}
-		err = rows.Scan(&id, &booking.UserID, &booking.HotelID, &booking.RoomNumber, &booking.TotalPrice, &booking.Currency, &booking.CheckIn, &booking.CheckOut, &booking.Status, &booking.PaymentID)
+		err = rows.Scan(&id, &booking.UserID, &booking.HotelID, &booking.RoomID, &booking.TotalPrice, &booking.Currency, &booking.CheckIn, &booking.CheckOut, &booking.Status, &booking.PaymentID)
 		if err != nil {
-			b.logger.Error("Error getting booking", "error", err)
+			b.logger.Error("Error getting postgres", "error", err)
 			return nil, err
 		}
 

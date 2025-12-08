@@ -7,6 +7,7 @@ import (
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/config/grpc"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/config/http"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/config/jwt"
+	kafkaconfig "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/config/kafka"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/config/payment"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/config/postgres"
 	"gopkg.in/yaml.v3"
@@ -16,8 +17,9 @@ type Config struct {
 	HTTPConfig     httpconfig.HTTPConfig         `yaml:"http"`
 	PostgresConfig postgresconfig.PostgresConfig `yaml:"postgres"`
 	GRPCConfig     grpcconfig.GRPCConfig         `yaml:"grpc"`
-	PaymentConfig  paymentconfig.PaymentConfig   `yaml:"payment"`
+	PaymentConfig  paymentconfig.PaymentConfig   `yaml:"payment_system"`
 	JWTConfig      jwtconfig.JWTConfig           `yaml:"jwt"`
+	KafkaConfig    kafkaconfig.KafkaConfig       `yaml:"kafka"`
 }
 
 func LoadConfig(path string) (*Config, error) {

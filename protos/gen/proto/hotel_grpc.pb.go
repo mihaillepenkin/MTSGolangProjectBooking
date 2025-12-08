@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.5.1
 // - protoc             v6.33.1
-// source: proto/hotel.proto
+// source: proto/grpc.proto
 
 package hotel
 
@@ -19,8 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Hotel_IsHotelier_FullMethodName  = "/hotel.Hotel/IsHotelier"
-	Hotel_GetRoomInfo_FullMethodName = "/hotel.Hotel/GetRoomInfo"
+	Hotel_IsHotelier_FullMethodName  = "/grpc.Hotel/IsHotelier"
+	Hotel_GetRoomInfo_FullMethodName = "/grpc.Hotel/GetRoomInfo"
 )
 
 // HotelClient is the client API for Hotel service.
@@ -142,7 +142,7 @@ func _Hotel_GetRoomInfo_Handler(srv interface{}, ctx context.Context, dec func(i
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Hotel_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "hotel.Hotel",
+	ServiceName: "grpc.Hotel",
 	HandlerType: (*HotelServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -155,5 +155,5 @@ var Hotel_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "proto/hotel.proto",
+	Metadata: "proto/grpc.proto",
 }

@@ -58,10 +58,10 @@ func (b *BookingHandler) BookRoom(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	bookingInfo := &object.BookingInfo{User: *user, HotelID: bookRoomRequest.HotelID, RoomNumber: bookRoomRequest.RoomNumber, CheckIn: bookRoomRequest.CheckIn, CheckOut: bookRoomRequest.CheckOut}
+	bookingInfo := &object.BookingInfo{User: *user, HotelID: bookRoomRequest.HotelID, RoomID: bookRoomRequest.RoomID, CheckIn: bookRoomRequest.CheckIn, CheckOut: bookRoomRequest.CheckOut}
 	url, err := b.bookingSaver.BookRoom(r.Context(), bookingInfo)
 	if err != nil {
-		b.logger.Error("Error booking room ", "Error", err)
+		b.logger.Error("Error postgres room ", "Error", err)
 		if errors.Is(err, error2.ErrBookingIsIntersected) {
 			http.Error(w, "Booking is intersected", http.StatusConflict)
 		} else if errors.Is(err, error3.ErrHotelRoomIsNotFound) {
@@ -88,20 +88,20 @@ func (b *BookingHandler) GetHotelBookings(w http.ResponseWriter, r *http.Request
 	user, err := userkey.ExtractUserFromReq(r)
 	if err != nil {
 		b.logger.Error("Error extracting user from request ", "Error", err)
-		http.Error(w, "Failed to get hotel bookings", http.StatusUnauthorized)
+		http.Error(w, "Failed to get grpc bookings", http.StatusUnauthorized)
 		return
 	}
 
 	if !userdomain.IsHotelier(user) {
 		b.logger.Error("User role is not allowed", "User", user)
-		http.Error(w, "Failed to get hotel bookings", http.StatusUnauthorized)
+		http.Error(w, "Failed to get grpc bookings", http.StatusUnauthorized)
 		return
 	}
 
 	hotelName, err := GetHotelNameFromRequest(r)
 	if err != nil {
-		b.logger.Error("Invalid hotel booking name")
-		http.Error(w, "Invalid hotel parameter", http.StatusBadRequest)
+		b.logger.Error("Invalid grpc postgres name")
+		http.Error(w, "Invalid grpc parameter", http.StatusBadRequest)
 		return
 	}
 
@@ -161,8 +161,8 @@ func (b *BookingHandler) GetUserBookings(w http.ResponseWriter, r *http.Request)
 func (b *BookingHandler) GetOccupiedRoomDurations(w http.ResponseWriter, r *http.Request) {
 	hotelName, err := GetHotelNameFromRequest(r)
 	if err != nil {
-		b.logger.Error("Invalid hotel booking name")
-		http.Error(w, "Invalid hotel parameter", http.StatusBadRequest)
+		b.logger.Error("Invalid grpc postgres name")
+		http.Error(w, "Invalid grpc parameter", http.StatusBadRequest)
 		return
 	}
 

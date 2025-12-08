@@ -17,6 +17,7 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/usecase/case/transactionmanager"
+	"github.com/segmentio/kafka-go"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 )
@@ -33,6 +34,7 @@ type App struct {
 	services     *Services
 	repositories *Repositories
 	grpcConn     *grpc.ClientConn
+	kafkaWriter  *kafka.Writer
 	logger       *slog.Logger
 }
 
@@ -70,15 +72,16 @@ func NewApp() (*App, error) {
 		return nil, err
 	}
 
+	kafkaWriter := &kafka.Writer{Addr: kafka.TCP(cfg.KafkaConfig.Address), Topic: cfg.KafkaConfig.Topic, Balancer: &kafka.RoundRobin{}}
 	txManager := transactionmanager.NewTransactionManager[string](db)
-	repos := NewRepositories(db, cfg.PaymentConfig, conn)
+	repos := NewRepositories(db, cfg.PaymentConfig, conn, kafkaWriter)
 	services := NewServices(cfg, repos, txManager)
 	handlers := NewHandlers(services)
 	handler := handlers.registerRoutes(cfg)
 
 	logger.Info("Successfully connected to PostgreSQL")
 	return &App{db: db, config: cfg, server: &http.Server{Addr: cfg.HTTPConfig.Address, Handler: handler, WriteTimeout: cfg.HTTPConfig.WriteTimeout, ReadTimeout: cfg.HTTPConfig.ReadTimeout},
-		repositories: repos, services: services, handlers: handlers, grpcConn: conn, logger: logger}, nil
+		repositories: repos, services: services, handlers: handlers, grpcConn: conn, kafkaWriter: kafkaWriter, logger: logger}, nil
 }
 
 func (app *App) Run() error {
@@ -127,8 +130,13 @@ func (app *App) Run() error {
 		app.logger.Error("Error closing grpc connection: ", "error", grpcErr)
 	}
 
-	if servErr != nil || dbErr != nil || grpcErr != nil {
-		return fmt.Errorf("error during application shutdown: %v, %v, %v", servErr, dbErr, grpcErr)
+	kafkaErr := app.kafkaWriter.Close()
+	if kafkaErr != nil {
+		app.logger.Error("Error closing kafka: ", "error", kafkaErr)
+	}
+
+	if servErr != nil || dbErr != nil || grpcErr != nil || kafkaErr != nil {
+		return fmt.Errorf("error during application shutdown: %v, %v, %v, %v", servErr, dbErr, grpcErr, kafkaErr)
 	}
 
 	app.logger.Info("Application stopped successfully")
@@ -199,6 +207,10 @@ func (app *App) closeAll() {
 	err = app.grpcConn.Close()
 	if err != nil {
 		app.logger.Error("Error closing gRPC connection: ", "error", err)
+	}
+	err = app.kafkaWriter.Close()
+	if err != nil {
+		app.logger.Error("Error closing kafka writer: ", "error", err)
 	}
 }
 

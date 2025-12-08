@@ -21,8 +21,8 @@ func NewBookingProvider(bookingRepo booking.Repository, hotelRepo hotel.Reposito
 	return &BookingProvider{bookingRepo: bookingRepo, hotelRepo: hotelRepo, logger: slog.Default().With("component", "booking_provider")}
 }
 
-func (b *BookingProvider) GetOccupiedRoomDurations(ctx context.Context, hotelID int64, roomNumber int64) ([][]time.Time, error) {
-	durations, err := b.bookingRepo.GetDurationsByRoom(ctx, hotelID, roomNumber)
+func (b *BookingProvider) GetOccupiedRoomDurations(ctx context.Context, hotelID int64, roomID int64) ([][]time.Time, error) {
+	durations, err := b.bookingRepo.GetDurationsByRoom(ctx, hotelID, roomID)
 	if err != nil {
 		b.logger.Error("Failed to get occupied durations", "error", err)
 		return nil, err

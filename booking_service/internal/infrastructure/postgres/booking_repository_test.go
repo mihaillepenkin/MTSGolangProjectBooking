@@ -1,4 +1,4 @@
-package booking
+package postgres
 
 import (
 	"context"
@@ -24,7 +24,7 @@ import (
 var (
 	testDB      *sql.DB
 	testRepo    *BookingRepository
-	testBooking = bookingdomain.Booking{UserID: uuid.New().String(), HotelID: 1, RoomNumber: 1, TotalPrice: 100, Currency: "USD", CheckIn: time.Date(2025, 10, 1, 0, 0, 0, 0, time.UTC),
+	testBooking = bookingdomain.Booking{UserID: uuid.New().String(), HotelID: 1, RoomID: 1, TotalPrice: 100, Currency: "USD", CheckIn: time.Date(2025, 10, 1, 0, 0, 0, 0, time.UTC),
 		CheckOut: time.Date(2025, 10, 2, 0, 0, 0, 0, time.UTC), Status: bookingdomain.BookingStatusUnpaid, PaymentID: uuid.New().String()}
 )
 
@@ -138,7 +138,7 @@ func TestBookingRepository_Delete(t *testing.T) {
 
 	var userID string
 	resErr := tx.QueryRowContext(txCtx, `SELECT * FROM bookings`).Scan(&userID)
-	assert.Assert(t, errors.Is(resErr, sql.ErrNoRows), "booking should be deleted")
+	assert.Assert(t, errors.Is(resErr, sql.ErrNoRows), "postgres should be deleted")
 }
 
 func TestBookingRepository_ShouldReturnNotFoundErrForDelete(t *testing.T) {
@@ -166,7 +166,7 @@ func TestBookingRepository_GetDurationsByRoom(t *testing.T) {
 
 	txCtx := context.WithValue(ctx, transactionmanager.TxKey{}, tx)
 	assert.Equal(t, nil, testRepo.Save(txCtx, &booking), fmt.Sprintf("testRepo.Save must be %v", nil))
-	durations, err := testRepo.GetDurationsByRoom(txCtx, booking.HotelID, booking.RoomNumber)
+	durations, err := testRepo.GetDurationsByRoom(txCtx, booking.HotelID, booking.RoomID)
 	if err != nil {
 		t.Fatalf("error getting durations: %v", err)
 	}
@@ -194,14 +194,14 @@ func TestBookingRepository_IsIntersected(t *testing.T) {
 	defer tx.Rollback()
 	txCtx := context.WithValue(ctx, transactionmanager.TxKey{}, tx)
 	assert.Equal(t, nil, testRepo.Save(txCtx, &firstBooking), fmt.Sprintf("testRepo.Save must be %v", nil))
-	isIntersected, err := testRepo.IsIntersected(txCtx, secondBooking.HotelID, secondBooking.RoomNumber, secondBooking.CheckIn, secondBooking.CheckOut)
+	isIntersected, err := testRepo.IsIntersected(txCtx, secondBooking.HotelID, secondBooking.RoomID, secondBooking.CheckIn, secondBooking.CheckOut)
 	if err != nil {
 		t.Fatalf("error getting isIntersected: %v", err)
 	}
 
 	assert.Equal(t, false, isIntersected, "isIntersected must be false")
 
-	isIntersected, err = testRepo.IsIntersected(txCtx, thirdBooking.HotelID, thirdBooking.RoomNumber, thirdBooking.CheckIn, thirdBooking.CheckOut)
+	isIntersected, err = testRepo.IsIntersected(txCtx, thirdBooking.HotelID, thirdBooking.RoomID, thirdBooking.CheckIn, thirdBooking.CheckOut)
 	if err != nil {
 		t.Fatalf("error getting isIntersected: %v", err)
 	}
@@ -222,18 +222,18 @@ func TestBookingRepository_GetByBookingInfo(t *testing.T) {
 	txCtx := context.WithValue(ctx, transactionmanager.TxKey{}, tx)
 	assert.Equal(t, nil, testRepo.Save(txCtx, &booking), fmt.Sprintf("testRepo.Save must be %v", nil))
 
-	newBooking, err := testRepo.GetByBookingInfo(txCtx, &object.BookingInfo{HotelID: booking.HotelID, RoomNumber: booking.RoomNumber, CheckIn: booking.CheckIn, CheckOut: booking.CheckOut, User: userdomain.User{ID: booking.UserID}})
+	newBooking, err := testRepo.GetByBookingInfo(txCtx, &object.BookingInfo{HotelID: booking.HotelID, RoomID: booking.RoomID, CheckIn: booking.CheckIn, CheckOut: booking.CheckOut, User: userdomain.User{ID: booking.UserID}})
 	if err != nil {
-		t.Fatalf("error getting booking info: %v", err)
+		t.Fatalf("error getting postgres info: %v", err)
 	}
 
 	if newBooking == nil {
-		t.Fatalf("booking info must not be nil")
+		t.Fatalf("postgres info must not be nil")
 	}
 
 	booking.ID = newBooking.ID
 
-	assert.Assert(t, equalBookings(booking, *newBooking), "booking must be equal to received booking")
+	assert.Assert(t, equalBookings(booking, *newBooking), "postgres must be equal to received postgres")
 }
 
 func TestBookingRepository_ShouldReturnNotFoundErrForGetBookingInfo(t *testing.T) {
@@ -248,7 +248,7 @@ func TestBookingRepository_ShouldReturnNotFoundErrForGetBookingInfo(t *testing.T
 	defer tx.Rollback()
 
 	txCtx := context.WithValue(ctx, transactionmanager.TxKey{}, tx)
-	_, err = testRepo.GetByBookingInfo(txCtx, &object.BookingInfo{HotelID: booking.HotelID, RoomNumber: booking.RoomNumber, CheckIn: booking.CheckIn, CheckOut: booking.CheckOut, User: userdomain.User{ID: booking.UserID}})
+	_, err = testRepo.GetByBookingInfo(txCtx, &object.BookingInfo{HotelID: booking.HotelID, RoomID: booking.RoomID, CheckIn: booking.CheckIn, CheckOut: booking.CheckOut, User: userdomain.User{ID: booking.UserID}})
 	assert.Assert(t, errors.Is(err, error2.ErrBookingIsNotFound), fmt.Sprintf("error should be %v", error2.ErrBookingIsNotFound))
 }
 
@@ -276,7 +276,7 @@ func TestBookingRepository_GetByHotel(t *testing.T) {
 
 	booking.ID = bookings[0].ID
 
-	assert.Assert(t, equalBookings(booking, *bookings[0]), "booking must be equal to received booking")
+	assert.Assert(t, equalBookings(booking, *bookings[0]), "postgres must be equal to received postgres")
 }
 
 func TestBookingRepository_GetByUser(t *testing.T) {
@@ -303,7 +303,7 @@ func TestBookingRepository_GetByUser(t *testing.T) {
 	}
 
 	booking.ID = bookings[0].ID
-	assert.Assert(t, equalBookings(booking, *bookings[0]), "booking must be equal to received booking")
+	assert.Assert(t, equalBookings(booking, *bookings[0]), "postgres must be equal to received postgres")
 }
 
 func TestBookingRepository_GetBookingsByStatus(t *testing.T) {
@@ -329,5 +329,5 @@ func TestBookingRepository_GetBookingsByStatus(t *testing.T) {
 	}
 
 	booking.ID = bookings[0].ID
-	assert.Assert(t, equalBookings(booking, *bookings[0]), "booking must be equal to received booking")
+	assert.Assert(t, equalBookings(booking, *bookings[0]), "postgres must be equal to received postgres")
 }

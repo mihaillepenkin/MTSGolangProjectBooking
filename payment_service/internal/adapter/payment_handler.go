@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	ProcessEndpoint = "/api/payment/process"
+	ProcessEndpoint = "/api/http/process"
 )
 
 type PaymentHandler struct {
@@ -32,7 +32,7 @@ func (h *PaymentHandler) CreatePayment(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		slog.Error("Error reading body", "error", err)
-		http.Error(w, "Failed to create the payment", http.StatusInternalServerError)
+		http.Error(w, "Failed to create the http", http.StatusInternalServerError)
 		return
 	}
 
@@ -48,11 +48,11 @@ func (h *PaymentHandler) CreatePayment(w http.ResponseWriter, r *http.Request) {
 
 	token, err := h.paymentService.CreatePayment(r.Context(), payment)
 	if err != nil {
-		slog.Error("Error creating payment", "error", err)
+		slog.Error("Error creating http", "error", err)
 		if errors.Is(err, error2.ErrPaymentIsInvalid) {
 			http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		} else {
-			http.Error(w, "Creating payment failed", http.StatusInternalServerError)
+			http.Error(w, "Creating http failed", http.StatusInternalServerError)
 		}
 		return
 	}
@@ -79,7 +79,7 @@ func (h *PaymentHandler) ProcessPayment(w http.ResponseWriter, r *http.Request) 
 		} else if errors.Is(err, error2.ErrPaymentFailed) {
 			http.Error(w, "Payment failed", http.StatusInternalServerError)
 		} else {
-			http.Error(w, "Failed to process payment", http.StatusInternalServerError)
+			http.Error(w, "Failed to process http", http.StatusInternalServerError)
 		}
 		return
 	}

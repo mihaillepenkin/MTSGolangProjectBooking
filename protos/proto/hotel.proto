@@ -4,7 +4,7 @@ package hotel;
 
 import "google/protobuf/timestamp.proto";
 
-option go_package = "github.com/mihaillepenkin/MTSGolangProjectBooking/protos/gen/hotel;hotel";
+option go_package = "github.com/mihaillepenkin/MTSGolangProjectBooking/protos/gen/grpc;grpc";
 
 service Hotel {
   rpc IsHotelier(IsHotelierRequest) returns (IsHotelierResponse);

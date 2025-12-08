@@ -36,12 +36,12 @@ func (p *PaymentService) ProcessPayment(ctx context.Context, token string) error
 		response.Status = "Success"
 		err = p.sender.Send(ctx, payment.URL, response)
 		if err != nil {
-			slog.Error("Error sending payment webhook")
+			slog.Error("Error sending http webhook")
 		}
 	} else {
 		err = p.sender.Send(ctx, payment.URL, response)
 		if err != nil {
-			slog.Error("Error sending payment webhook")
+			slog.Error("Error sending http webhook")
 		}
 	}
 
@@ -55,7 +55,7 @@ func (p *PaymentService) ProcessPayment(ctx context.Context, token string) error
 func (p *PaymentService) CreatePayment(ctx context.Context, payment *paymentdomain.Payment) (string, error) {
 	err := paymentdomain.ValidatePayment(payment)
 	if err != nil {
-		slog.Error("Error validating payment", "error", err)
+		slog.Error("Error validating http", "error", err)
 		return "", err
 	}
 

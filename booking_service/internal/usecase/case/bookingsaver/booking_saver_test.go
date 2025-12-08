@@ -26,8 +26,8 @@ var (
 	testUserID               = "1"
 	testRoomNumber     int64 = 1
 	testUser                 = &userdomain.User{ID: testUserID}
-	testBooking              = &booking.Booking{UserID: testUserID, HotelID: testHotelName, RoomNumber: testRoomNumber, TotalPrice: 100, Currency: "USD", CheckIn: testDurations[0][0], CheckOut: testDurations[0][1], Status: booking.BookingStatusPaid, PaymentID: "1"}
-	testBookingInfo          = &object.BookingInfo{User: *testUser, HotelID: testHotelName, RoomNumber: testRoomNumber, CheckIn: testDurations[0][0], CheckOut: testDurations[0][1]}
+	testBooking              = &booking.Booking{UserID: testUserID, HotelID: testHotelName, RoomID: testRoomNumber, TotalPrice: 100, Currency: "USD", CheckIn: testDurations[0][0], CheckOut: testDurations[0][1], Status: booking.BookingStatusPaid, PaymentID: "1"}
+	testBookingInfo          = &object.BookingInfo{User: *testUser, HotelID: testHotelName, RoomID: testRoomNumber, CheckIn: testDurations[0][0], CheckOut: testDurations[0][1]}
 	testSaver          *BookingSaver
 )
 
@@ -49,10 +49,10 @@ func (m *MockBookRepo) IsIntersected(ctx context.Context, hotelName int64, hotel
 }
 
 func (m *MockBookRepo) GetByBookingInfo(ctx context.Context, bookingInfo *object.BookingInfo) (*booking.Booking, error) {
-	if bookingInfo.HotelID == testHotelName && bookingInfo.RoomNumber == testRoomNumber {
+	if bookingInfo.HotelID == testHotelName && bookingInfo.RoomID == testRoomNumber {
 		return testBooking, nil
 	}
-	return nil, fmt.Errorf("booking info not found")
+	return nil, fmt.Errorf("postgres info not found")
 }
 
 func (m *MockBookRepo) GetByHotel(ctx context.Context, hotelName int64) ([]*booking.Booking, error) {
@@ -113,7 +113,7 @@ func TestBookingSaver_BookRoom(t *testing.T) {
 	ctx := context.Background()
 	_, err := testSaver.BookRoom(ctx, &object.BookingInfo{HotelID: 2})
 	assert.Assert(t, errors.Is(err, error3.ErrBookingIsIntersected), "book room error")
-	_, err = testSaver.BookRoom(ctx, &object.BookingInfo{HotelID: testHotelName, RoomNumber: 2})
+	_, err = testSaver.BookRoom(ctx, &object.BookingInfo{HotelID: testHotelName, RoomID: 2})
 	assert.Equal(t, error2.ErrHotelRoomIsNotFound, err, "error must be not found")
 	_, err = testSaver.BookRoom(ctx, testBookingInfo)
 	assert.Assert(t, err == nil, "error should be nil")

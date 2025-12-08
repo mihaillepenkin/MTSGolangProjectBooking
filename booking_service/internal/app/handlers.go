@@ -18,7 +18,7 @@ type Handlers struct {
 func NewHandlers(services *Services) *Handlers {
 	bookingHandler := booking.NewBookingHandler(services.BookingSaver, services.BookingProvider)
 	authHandler := middleware.NewAuthMiddleware(services.TokenService)
-	webhookHandler := webhook.NewWebhookHandler(services.BookingSaver)
+	webhookHandler := webhook.NewWebhookHandler(services.EventSaver)
 	return &Handlers{bookingHandler, authHandler, webhookHandler}
 }
 

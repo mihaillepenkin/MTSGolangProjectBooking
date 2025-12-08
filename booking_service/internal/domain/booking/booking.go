@@ -29,7 +29,7 @@ type Booking struct {
 	ID         object.BookingID
 	UserID     string
 	HotelID    int64
-	RoomNumber int64
+	RoomID     int64
 	TotalPrice float64
 	Currency   string
 	CheckIn    time.Time

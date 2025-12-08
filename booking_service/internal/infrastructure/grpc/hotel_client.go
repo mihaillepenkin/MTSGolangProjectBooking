@@ -1,4 +1,4 @@
-package hotel
+package grpc
 
 import (
 	"context"
@@ -45,8 +45,8 @@ func (h *HotelClient) IsHotelier(ctx context.Context, userID string, hotelID int
 	return response.IsHotelier, nil
 }
 
-func (h *HotelClient) GetRoomInfo(ctx context.Context, hotelID int64, roomNumber int64) (*hotel.RoomInfo, error) {
-	request := &grpchotel.RoomInfoRequest{HotelID: hotelID, RoomNumber: roomNumber}
+func (h *HotelClient) GetRoomInfo(ctx context.Context, hotelID int64, roomID int64) (*hotel.RoomInfo, error) {
+	request := &grpchotel.RoomInfoRequest{HotelID: hotelID, RoomID: roomID}
 
 	response, err := h.client.GetRoomInfo(ctx, request)
 	if err != nil {
@@ -70,8 +70,10 @@ func (h *HotelClient) GetRoomInfo(ctx context.Context, hotelID int64, roomNumber
 	}
 
 	roomInfo := &hotel.RoomInfo{
-		Currency: response.Currency,
-		Amount:   response.Amount,
+		Currency:   response.Currency,
+		Amount:     response.Amount,
+		HotelName:  response.HotelName,
+		RoomNumber: int64(response.RoomNumber),
 	}
 
 	return roomInfo, nil

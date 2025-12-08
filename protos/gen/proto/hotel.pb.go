@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.10
 // 	protoc        v6.33.1
-// source: proto/hotel.proto
+// source: proto/grpc.proto
 
 package hotel
 
@@ -24,7 +24,7 @@ const (
 
 type RoomInfoRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	HotelName     string                 `protobuf:"bytes,1,opt,name=hotelName,proto3" json:"hotelName,omitempty"`   // Name of the hotel
+	HotelName     string                 `protobuf:"bytes,1,opt,name=hotelName,proto3" json:"hotelName,omitempty"`   // Name of the grpc
 	RoomNumber    string                 `protobuf:"bytes,2,opt,name=roomNumber,proto3" json:"roomNumber,omitempty"` // Number of the room
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -128,7 +128,7 @@ func (x *RoomInfoResponse) GetCurrency() string {
 
 type IsHotelierRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	HotelName     string                 `protobuf:"bytes,1,opt,name=hotelName,proto3" json:"hotelName,omitempty"` // Name of the hotel
+	HotelName     string                 `protobuf:"bytes,1,opt,name=hotelName,proto3" json:"hotelName,omitempty"` // Name of the grpc
 	UserID        string                 `protobuf:"bytes,2,opt,name=userID,proto3" json:"userID,omitempty"`       // ID to check for hotelier
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -226,7 +226,7 @@ var File_proto_hotel_proto protoreflect.FileDescriptor
 
 const file_proto_hotel_proto_rawDesc = "" +
 	"\n" +
-	"\x11proto/hotel.proto\x12\x05hotel\x1a\x1fgoogle/protobuf/timestamp.proto\"O\n" +
+	"\x11proto/grpc.proto\x12\x05hotel\x1a\x1fgoogle/protobuf/timestamp.proto\"O\n" +
 	"\x0fRoomInfoRequest\x12\x1c\n" +
 	"\thotelName\x18\x01 \x01(\tR\thotelName\x12\x1e\n" +
 	"\n" +
@@ -244,8 +244,8 @@ const file_proto_hotel_proto_rawDesc = "" +
 	"isHotelier2\x8a\x01\n" +
 	"\x05Hotel\x12A\n" +
 	"\n" +
-	"IsHotelier\x12\x18.hotel.IsHotelierRequest\x1a\x19.hotel.IsHotelierResponse\x12>\n" +
-	"\vGetRoomInfo\x12\x16.hotel.RoomInfoRequest\x1a\x17.hotel.RoomInfoResponseBJZHgithub.com/mihaillepenkin/MTSGolangProjectBooking/protos/gen/hotel;hotelb\x06proto3"
+	"IsHotelier\x12\x18.grpc.IsHotelierRequest\x1a\x19.grpc.IsHotelierResponse\x12>\n" +
+	"\vGetRoomInfo\x12\x16.grpc.RoomInfoRequest\x1a\x17.grpc.RoomInfoResponseBJZHgithub.com/mihaillepenkin/MTSGolangProjectBooking/protos/gen/grpc;hotelb\x06proto3"
 
 var (
 	file_proto_hotel_proto_rawDescOnce sync.Once
@@ -261,16 +261,16 @@ func file_proto_hotel_proto_rawDescGZIP() []byte {
 
 var file_proto_hotel_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_proto_hotel_proto_goTypes = []any{
-	(*RoomInfoRequest)(nil),    // 0: hotel.RoomInfoRequest
-	(*RoomInfoResponse)(nil),   // 1: hotel.RoomInfoResponse
-	(*IsHotelierRequest)(nil),  // 2: hotel.IsHotelierRequest
-	(*IsHotelierResponse)(nil), // 3: hotel.IsHotelierResponse
+	(*RoomInfoRequest)(nil),    // 0: grpc.RoomInfoRequest
+	(*RoomInfoResponse)(nil),   // 1: grpc.RoomInfoResponse
+	(*IsHotelierRequest)(nil),  // 2: grpc.IsHotelierRequest
+	(*IsHotelierResponse)(nil), // 3: grpc.IsHotelierResponse
 }
 var file_proto_hotel_proto_depIdxs = []int32{
-	2, // 0: hotel.Hotel.IsHotelier:input_type -> hotel.IsHotelierRequest
-	0, // 1: hotel.Hotel.GetRoomInfo:input_type -> hotel.RoomInfoRequest
-	3, // 2: hotel.Hotel.IsHotelier:output_type -> hotel.IsHotelierResponse
-	1, // 3: hotel.Hotel.GetRoomInfo:output_type -> hotel.RoomInfoResponse
+	2, // 0: grpc.Hotel.IsHotelier:input_type -> grpc.IsHotelierRequest
+	0, // 1: grpc.Hotel.GetRoomInfo:input_type -> grpc.RoomInfoRequest
+	3, // 2: grpc.Hotel.IsHotelier:output_type -> grpc.IsHotelierResponse
+	1, // 3: grpc.Hotel.GetRoomInfo:output_type -> grpc.RoomInfoResponse
 	2, // [2:4] is the sub-list for method output_type
 	0, // [0:2] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name

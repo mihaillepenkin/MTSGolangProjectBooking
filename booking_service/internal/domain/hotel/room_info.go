@@ -1,6 +1,8 @@
 package hotel
 
 type RoomInfo struct {
-	Amount   int64
-	Currency string
+	Amount     int32
+	Currency   string
+	HotelName  string
+	RoomNumber int64
 }

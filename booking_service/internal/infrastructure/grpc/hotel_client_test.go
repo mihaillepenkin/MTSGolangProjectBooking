@@ -1,4 +1,4 @@
-package hotel
+package grpc
 
 import (
 	"context"
@@ -38,11 +38,11 @@ func (*MockClient) IsHotelier(ctx context.Context, in *hotel.IsHotelierRequest, 
 }
 
 func (*MockClient) GetRoomInfo(ctx context.Context, in *hotel.RoomInfoRequest, opts ...grpc.CallOption) (*hotel.RoomInfoResponse, error) {
-	if in.RoomNumber < 0 || in.HotelID < 0 {
+	if in.RoomID < 0 || in.HotelID < 0 {
 		return nil, status.Error(codes.InvalidArgument, "Request is invalid")
 	}
 
-	if in.HotelID == hotelID && in.RoomNumber == roomNumber {
+	if in.HotelID == hotelID && in.RoomID == roomNumber {
 		return &hotel.RoomInfoResponse{Currency: "USD", Amount: 100}, nil
 	}
 

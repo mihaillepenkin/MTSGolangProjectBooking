@@ -41,14 +41,14 @@ func (wh *WebhookHandler) ServeWebhook(w http.ResponseWriter, r *http.Request) {
 	if webhookRequest.Status == "Success" {
 		err = wh.bookingService.ConfirmBooking(r.Context(), &webhookRequest.Info)
 		if err != nil {
-			wh.logger.Error("WebhookHandler.ServeWebhook failed to confirm booking", "error", err)
+			wh.logger.Error("WebhookHandler.ServeWebhook failed to confirm postgres", "error", err)
 			http.Error(w, "failed to serve", http.StatusInternalServerError)
 			return
 		}
 	} else if webhookRequest.Status == "Failed" {
 		err = wh.bookingService.DeleteBooking(r.Context(), &webhookRequest.Info)
 		if err != nil {
-			wh.logger.Error("WebhookHandler.ServeWebhook failed to delete booking", "error", err)
+			wh.logger.Error("WebhookHandler.ServeWebhook failed to delete postgres", "error", err)
 			http.Error(w, "failed to serve", http.StatusInternalServerError)
 		}
 	}

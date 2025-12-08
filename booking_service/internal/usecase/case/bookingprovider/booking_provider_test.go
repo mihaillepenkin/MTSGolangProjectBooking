@@ -20,7 +20,7 @@ var (
 	testRoomNumber int64 = 1
 	testUser             = &userdomain.User{ID: testUserID}
 	testDurations        = [][]time.Time{{time.Date(2025, 10, 10, 0, 0, 0, 0, time.UTC), time.Date(2025, 10, 11, 0, 0, 0, 0, time.UTC)}}
-	testBooking          = &booking.Booking{UserID: testUserID, HotelID: testHotelName, RoomNumber: testRoomNumber, TotalPrice: 100, Currency: "USD", CheckIn: testDurations[0][0], CheckOut: testDurations[0][1], Status: booking.BookingStatusPaid, PaymentID: "1"}
+	testBooking          = &booking.Booking{UserID: testUserID, HotelID: testHotelName, RoomID: testRoomNumber, TotalPrice: 100, Currency: "USD", CheckIn: testDurations[0][0], CheckOut: testDurations[0][1], Status: booking.BookingStatusPaid, PaymentID: "1"}
 	testProvider   *BookingProvider
 )
 

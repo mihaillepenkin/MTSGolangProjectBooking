@@ -4,10 +4,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/mihaillepenkin/MTSGolangProjectBooking/payment_service/internal/application/usecase/jwt"
-	payment2 "github.com/mihaillepenkin/MTSGolangProjectBooking/payment_service/internal/application/usecase/payment"
-	"github.com/mihaillepenkin/MTSGolangProjectBooking/payment_service/internal/application/usecase/webhooksender"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/payment_service/internal/domain/payment"
+	"github.com/mihaillepenkin/MTSGolangProjectBooking/payment_service/internal/usecase/case/jwt"
+	payment2 "github.com/mihaillepenkin/MTSGolangProjectBooking/payment_service/internal/usecase/case/payment"
+	"github.com/mihaillepenkin/MTSGolangProjectBooking/payment_service/internal/usecase/case/webhooksender"
 )
 
 type Services struct {

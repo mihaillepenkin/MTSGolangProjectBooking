@@ -25,19 +25,19 @@ func NewPaymentSender(client *http.Client, baseURL string) *PaymentSenderImpl {
 func (p *PaymentSenderImpl) SendPayment(ctx context.Context, info *payment.PaymentInfo) (*payment.PaymentResponse, error) {
 	jsonData, err := json.Marshal(info)
 	if err != nil {
-		p.logger.Error("Error marshalling http info", "error", err)
+		p.logger.Error("Error marshalling payment info", "error", err)
 		return nil, err
 	}
 
 	req, err := http.NewRequestWithContext(ctx, "POST", p.baseURL, bytes.NewBuffer(jsonData))
 	if err != nil {
-		p.logger.Error("Error creating http request", "error", err)
+		p.logger.Error("Error creating payment request", "error", err)
 		return nil, err
 	}
 
 	resp, err := p.client.Do(req)
 	if err != nil {
-		p.logger.Error("Error executing http request", "error", err)
+		p.logger.Error("Error executing payment request", "error", err)
 		return nil, err
 	}
 
@@ -45,7 +45,7 @@ func (p *PaymentSenderImpl) SendPayment(ctx context.Context, info *payment.Payme
 		p.logger.Error("Payment request failed with status",
 			"status", resp.StatusCode)
 
-		return nil, fmt.Errorf("http failed with status %d",
+		return nil, fmt.Errorf("payment failed with status %d",
 			resp.StatusCode)
 	}
 

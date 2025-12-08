@@ -11,9 +11,9 @@ http:
   allowed_origins: ["http://localhost:8083"]
   webhook_handler_endpoint: "/api/webhook-callback"
 payment_system:
-  create_endpoint: "localhost:8083/api/http"
+  create_endpoint: "localhost:8083/api/payment"
 postgres:
-  dsn: "postgresql://postgres:123@localhost:5432/postgres?sslmode=disable"
+  dsn: "postgresql://postgres:123@localhost:5432/booking?sslmode=disable"
   max_connections: 25
   max_idle_connections: 10
   conn_max_lifetime: "30m"

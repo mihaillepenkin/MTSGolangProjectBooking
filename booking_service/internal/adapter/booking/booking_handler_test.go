@@ -31,7 +31,7 @@ var (
 )
 
 const (
-	BookingPrefix            = "/postgres"
+	BookingPrefix            = "/booking"
 	BookRoomEndpoint         = BookingPrefix
 	GetHotelBookingsEndpoint = BookingPrefix + "/bookings" + "/hotelier"
 	GetUserBookingsEndpoint  = BookingPrefix + "/client"

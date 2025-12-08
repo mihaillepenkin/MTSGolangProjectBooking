@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/mihaillepenkin/MTSGolangProjectBooking/payment_service/internal/application/dto"
 	paymentdomain "github.com/mihaillepenkin/MTSGolangProjectBooking/payment_service/internal/domain/payment"
 	error2 "github.com/mihaillepenkin/MTSGolangProjectBooking/payment_service/internal/domain/payment/error"
+	"github.com/mihaillepenkin/MTSGolangProjectBooking/payment_service/internal/usecase/dto"
 )
 
 type JWTService struct {

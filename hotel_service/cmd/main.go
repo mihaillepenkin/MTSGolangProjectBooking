@@ -6,15 +6,10 @@ import (
 	"hotel_service/internal/infrastructure/grpc"
 	"hotel_service/internal/infrastructure/http"
 	"log/slog"
-	"net"
-	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-
-	"github.com/Vlad-Ali/MTSGolangProjectBooking-protos/gen/proto/hotel"
-	"google.golang.org/grpc"
 )
 
 func main() {
@@ -24,12 +19,17 @@ func main() {
 	logger := slog.New(textHandler)
 	slog.SetDefault(logger)
 
-	db := config.ConfigureDb()
+	cfg := config.LoadConfig()
+	if cfg == nil {
+		slog.Error("Error loading config")
+		return
+	}
+	db := cfg.ConnectToDb()
 	if db == nil {
 		slog.Error("Error connecting to database")
 		return
 	}
-	err := config.RunMigrations(db)
+	err := cfg.RunMigrations(db)
 	if err != nil {
 		slog.Error("Error running migrations")
 		return
@@ -37,19 +37,18 @@ func main() {
 
 	hotelGrpcService := grpc2.HotelGrpcService{}
 	hotelGrpcService.Initialize(db)
-	grpcServer := grpc.NewServer()
 
-	hotel.RegisterHotelServer(grpcServer, &hotelGrpcService)
-
-	listener, err := net.Listen("tcp", ":9090")
+	grpcServer, listener := cfg.ConfigureGrpcServer(&hotelGrpcService)
+	if grpcServer == nil || listener == nil {
+		slog.Error("Error configuring gRPC server")
+		return
+	}
+	err = grpcServer.Serve(listener)
 	if err != nil {
-		slog.Error("Error listening on port 9090")
+		slog.Error("Error running gRPC server")
 		return
 	}
-	if err = grpcServer.Serve(listener); err != nil {
-		slog.Error("Error serving gRPC server")
-		return
-	}
+	slog.Info("gRPC server is running...")
 
 	hotelHandler := api.HotelHandler{}
 	hotelHandler.Initialize(db)
@@ -57,13 +56,10 @@ func main() {
 	mux := api.CreateRouting(&hotelHandler)
 	handler := api.AuthMiddleware(api.CORSMiddleware(mux))
 
-	server := &http.Server{
-		Addr:    ":8082",
-		Handler: handler,
-	}
+	server := cfg.ConfigureHttpServer(&handler)
 	go func() {
 		err := server.ListenAndServe()
-		slog.Info("Server is running on port 8082...")
+		slog.Info("Http server is running...")
 		if err != nil {
 			slog.Error(err.Error())
 		}

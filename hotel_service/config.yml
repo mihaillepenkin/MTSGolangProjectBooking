@@ -1,0 +1,14 @@
+postgres:
+  dsn: "postgresql://postgres:postgres@localhost:5432/hotels_data?sslmode=disable"
+  max_connections: 25
+  max_idle_connections: 10
+  conn_max_lifetime: "30m"
+  conn_max_idle_time: "5m"
+grpc:
+  address: ":9090"
+http:
+  address: ":8082"
+  host: "localhost"
+  port: "8082"
+  read_timeout: "10s"
+  write_timeout: "10s"

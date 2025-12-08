@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"errors"
 	"log/slog"
 	"strconv"
 )
@@ -15,7 +14,7 @@ func (hgr *HotelGrpcRepository) Initialize(db *sql.DB) {
 	hgr.Db = db
 }
 
-func (hgr *HotelGrpcRepository) IsHotelier(hotelName string, userId string) (bool, error) {
+func (hgr *HotelGrpcRepository) IsHotelier(hotelId int64, userId string) (bool, error) {
 	tx, err := hgr.Db.Begin()
 	if err != nil {
 		return false, err
@@ -27,7 +26,7 @@ func (hgr *HotelGrpcRepository) IsHotelier(hotelName string, userId string) (boo
 		}
 	}(tx)
 
-	row := tx.QueryRow("SELECT owner_id FROM hotels WHERE name = $1", hotelName)
+	row := tx.QueryRow("SELECT owner_id FROM hotels WHERE id = $1", hotelId)
 	var ownerId int64
 	err = row.Scan(&ownerId)
 	if err != nil {
@@ -39,16 +38,16 @@ func (hgr *HotelGrpcRepository) IsHotelier(hotelName string, userId string) (boo
 	}
 
 	if strconv.FormatInt(ownerId, 10) != userId {
-		return false, errors.New("user is not hotel owner")
+		return false, nil
 	}
 
 	return true, nil
 }
 
-func (hgr *HotelGrpcRepository) GetRoomInfo(hotelName string, roomNumber string) (int64, string, error) {
+func (hgr *HotelGrpcRepository) GetRoomInfo(hotelId int64, roomId int64) (int, int, string, string, error) {
 	tx, err := hgr.Db.Begin()
 	if err != nil {
-		return 0, "", err
+		return 0, 0, "", "", err
 	}
 	defer func(tx *sql.Tx) {
 		err := tx.Rollback()
@@ -57,23 +56,24 @@ func (hgr *HotelGrpcRepository) GetRoomInfo(hotelName string, roomNumber string)
 		}
 	}(tx)
 
-	row := tx.QueryRow("SELECT id FROM hotels WHERE name = $1", hotelName)
-	var id int64
-	err = row.Scan(&id)
+	row := tx.QueryRow("SELECT name FROM hotels WHERE id = $1", hotelId)
+	var hotelName string
+	err = row.Scan(&hotelName)
 	if err != nil {
-		return 0, "", err
+		return 0, 0, "", "", err
 	}
-	row = tx.QueryRow("SELECT price FROM rooms WHERE hotel_id = $1", id)
-	var price int64
-	err = row.Scan(&price)
+	row = tx.QueryRow("SELECT number, price FROM rooms WHERE id = $1", roomId)
+	var roomNumber int
+	var price int
+	err = row.Scan(&roomNumber, &price)
 	if err != nil {
-		return 0, "", err
+		return 0, 0, "", "", err
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		return 0, "", err
+		return 0, 0, "", "", err
 	}
 
-	return price, "RUB", nil
+	return roomNumber, price, "RUB", hotelName, nil
 }

@@ -1,7 +1,11 @@
 github.com/Vlad-Ali/MTSGolangProjectBooking-protos v0.1.1/go.mod h1:NbGuSERpR556+LQGFwGXRyZtDI04bMkubDlie+pi0kk=
+github.com/Vlad-Ali/MTSGolangProjectBooking-protos v0.2.2/go.mod h1:NbGuSERpR556+LQGFwGXRyZtDI04bMkubDlie+pi0kk=
+github.com/Vlad-Ali/MTSGolangProjectBooking-protos v0.2.3/go.mod h1:NbGuSERpR556+LQGFwGXRyZtDI04bMkubDlie+pi0kk=
 github.com/golang-jwt/jwt/v5 v5.3.0 h1:pv4AsKCKKZuqlgs5sUmn4x8UlGa0kEVt/puTpKx9vvo=
 github.com/golang-jwt/jwt/v5 v5.3.0/go.mod h1:fxCRLWMO43lRc8nhHWY6LGqRcf+1gQWArsqaEUEa5bE=
 github.com/golang-migrate/migrate/v4 v4.19.0/go.mod h1:9dyEcu+hO+G9hPSw8AIg50yg622pXJsoHItQnDGZkI0=
 github.com/joho/godotenv v1.5.1 h1:7eLL/+HRGLY0ldzfGMeQkb7vMd0as4CfYvUVzLqw0N0=
 github.com/joho/godotenv v1.5.1/go.mod h1:f4LDr5Voq0i2e/R5DDNOoa2zzDfwtkZa6DnEwAbqwq4=
 google.golang.org/grpc v1.67.0/go.mod h1:1gLDyUQU7CTLJI90u3nXZ9ekeghjeM7pTDZlqFNg2AA=
+gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=

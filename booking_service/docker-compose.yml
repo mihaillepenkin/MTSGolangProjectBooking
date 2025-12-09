@@ -14,9 +14,36 @@ services:
     networks:
       - booking-network
 
+  prometheus:
+    image: prom/prometheus:v3.8.0
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    networks:
+      - booking-network
+
+  grafana:
+    image: grafana/grafana:12.3.0
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - booking-network
 
 volumes:
   postgres-data:
+  prometheus-data:
+  grafana-data:
 
 networks:
   booking-network:

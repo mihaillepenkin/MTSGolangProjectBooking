@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ${CONTAINER_NAME}
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - hotel-network
+
+
+volumes:
+  postgres-data:
+
+networks:
+  hotel-network:

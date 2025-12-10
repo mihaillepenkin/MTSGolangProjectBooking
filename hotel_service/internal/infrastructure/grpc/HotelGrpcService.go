@@ -21,12 +21,8 @@ func (hgs *HotelGrpcService) Initialize(db *sql.DB) {
 }
 
 func (hgs *HotelGrpcService) IsHotelier(ctx context.Context, r *hotel.IsHotelierRequest) (*hotel.IsHotelierResponse, error) {
-	isHotelier, err := hgs.hotelGrpcRepository.IsHotelier(r.HotelName, r.UserID)
+	isHotelier, err := hgs.hotelGrpcRepository.IsHotelier(r.HotelID, r.UserID)
 	if err != nil {
-		if err.Error() == "user is not hotel owner" {
-			slog.Error("Ошибка в HotelGrpcService, метод IsHotelier: " + err.Error())
-			return nil, status.Error(codes.PermissionDenied, "Ошибка при проверке личности владельца отеля")
-		}
 		slog.Error("Ошибка в HotelGrpcRepository, метод IsHotelier: " + err.Error())
 		return nil, status.Error(codes.Internal, "Ошибка при проверке личности владельца отеля")
 	}
@@ -35,11 +31,11 @@ func (hgs *HotelGrpcService) IsHotelier(ctx context.Context, r *hotel.IsHotelier
 }
 
 func (hgs *HotelGrpcService) GetRoomInfo(ctx context.Context, r *hotel.RoomInfoRequest) (*hotel.RoomInfoResponse, error) {
-	amount, currency, err := hgs.hotelGrpcRepository.GetRoomInfo(r.HotelName, r.RoomNumber)
+	roomNumber, price, currency, hotelName, err := hgs.hotelGrpcRepository.GetRoomInfo(r.HotelID, r.RoomID)
 	if err != nil {
 		slog.Error("Ошибка в HotelGrpcRepository, метод GetRoomInfo: " + err.Error())
 		return nil, status.Error(codes.Internal, "Ошибка при получении информации о номере в отеле")
 	}
 
-	return &hotel.RoomInfoResponse{Amount: amount, Currency: currency}, nil
+	return &hotel.RoomInfoResponse{Amount: int32(price), Currency: currency, HotelName: hotelName, RoomNumber: int32(roomNumber)}, nil
 }

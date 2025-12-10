@@ -9,7 +9,6 @@ import (
 type HotelService interface {
 	Initialize(db *sql.DB)
 	GetAllHotels() (response.AllHotelsInfoResponseDto, error)
-	AddHotelInfo(hotelInfo *request.HotelInfoAdditionRequestDto) (response.HotelInfoResponseDto, error)
-	UpdateHotelInfo(newHotelInfo *request.HotelInfoUpdateRequestDto) (response.HotelInfoResponseDto, error)
-	GetHotelById(id int64) (response.HotelInfoResponseDto, error)
+	AddHotelInfo(hotelInfo *request.HotelInfoAdditionRequestDto, userId int64) (response.HotelInfoResponseDto, error)
+	UpdateHotelInfo(newHotelInfo *request.HotelInfoUpdateRequestDto, userId int64) (response.HotelInfoResponseDto, error)
 }

@@ -138,7 +138,7 @@ func TestBookingRepository_Delete(t *testing.T) {
 
 	var userID string
 	resErr := tx.QueryRowContext(txCtx, `SELECT * FROM bookings`).Scan(&userID)
-	assert.Assert(t, errors.Is(resErr, sql.ErrNoRows), "postgres should be deleted")
+	assert.Assert(t, errors.Is(resErr, sql.ErrNoRows), "booking should be deleted")
 }
 
 func TestBookingRepository_ShouldReturnNotFoundErrForDelete(t *testing.T) {
@@ -224,16 +224,16 @@ func TestBookingRepository_GetByBookingInfo(t *testing.T) {
 
 	newBooking, err := testRepo.GetByBookingInfo(txCtx, &object.BookingInfo{HotelID: booking.HotelID, RoomID: booking.RoomID, CheckIn: booking.CheckIn, CheckOut: booking.CheckOut, User: userdomain.User{ID: booking.UserID}})
 	if err != nil {
-		t.Fatalf("error getting postgres info: %v", err)
+		t.Fatalf("error getting booking info: %v", err)
 	}
 
 	if newBooking == nil {
-		t.Fatalf("postgres info must not be nil")
+		t.Fatalf("booking info must not be nil")
 	}
 
 	booking.ID = newBooking.ID
 
-	assert.Assert(t, equalBookings(booking, *newBooking), "postgres must be equal to received postgres")
+	assert.Assert(t, equalBookings(booking, *newBooking), "booking must be equal to received postgres")
 }
 
 func TestBookingRepository_ShouldReturnNotFoundErrForGetBookingInfo(t *testing.T) {
@@ -276,7 +276,7 @@ func TestBookingRepository_GetByHotel(t *testing.T) {
 
 	booking.ID = bookings[0].ID
 
-	assert.Assert(t, equalBookings(booking, *bookings[0]), "postgres must be equal to received postgres")
+	assert.Assert(t, equalBookings(booking, *bookings[0]), "booking must be equal to received postgres")
 }
 
 func TestBookingRepository_GetByUser(t *testing.T) {
@@ -303,7 +303,7 @@ func TestBookingRepository_GetByUser(t *testing.T) {
 	}
 
 	booking.ID = bookings[0].ID
-	assert.Assert(t, equalBookings(booking, *bookings[0]), "postgres must be equal to received postgres")
+	assert.Assert(t, equalBookings(booking, *bookings[0]), "booking must be equal to received postgres")
 }
 
 func TestBookingRepository_GetBookingsByStatus(t *testing.T) {
@@ -329,5 +329,5 @@ func TestBookingRepository_GetBookingsByStatus(t *testing.T) {
 	}
 
 	booking.ID = bookings[0].ID
-	assert.Assert(t, equalBookings(booking, *bookings[0]), "postgres must be equal to received postgres")
+	assert.Assert(t, equalBookings(booking, *bookings[0]), "booking must be equal to received postgres")
 }

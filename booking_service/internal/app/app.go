@@ -17,6 +17,8 @@ import (
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	_ "github.com/lib/pq"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/usecase/case/transactionmanager"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/segmentio/kafka-go"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -72,12 +74,15 @@ func NewApp() (*App, error) {
 		return nil, err
 	}
 
+	registry := prometheus.NewRegistry()
+	registry.MustRegister(collectors.NewGoCollector())
+
 	kafkaWriter := &kafka.Writer{Addr: kafka.TCP(cfg.KafkaConfig.Address), Topic: cfg.KafkaConfig.Topic, Balancer: &kafka.RoundRobin{}}
 	txManager := transactionmanager.NewTransactionManager[string](db)
 	repos := NewRepositories(db, cfg.PaymentConfig, conn, kafkaWriter)
 	services := NewServices(cfg, repos, txManager)
-	handlers := NewHandlers(services)
-	handler := handlers.registerRoutes(cfg)
+	handlers := NewHandlers(services, registry)
+	handler := handlers.registerRoutes(cfg, registry)
 
 	logger.Info("Successfully connected to PostgreSQL")
 	return &App{db: db, config: cfg, server: &http.Server{Addr: cfg.HTTPConfig.Address, Handler: handler, WriteTimeout: cfg.HTTPConfig.WriteTimeout, ReadTimeout: cfg.HTTPConfig.ReadTimeout},

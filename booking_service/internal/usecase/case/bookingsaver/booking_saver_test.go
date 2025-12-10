@@ -52,7 +52,7 @@ func (m *MockBookRepo) GetByBookingInfo(ctx context.Context, bookingInfo *object
 	if bookingInfo.HotelID == testHotelName && bookingInfo.RoomID == testRoomNumber {
 		return testBooking, nil
 	}
-	return nil, fmt.Errorf("postgres info not found")
+	return nil, fmt.Errorf("booking info not found")
 }
 
 func (m *MockBookRepo) GetByHotel(ctx context.Context, hotelName int64) ([]*booking.Booking, error) {

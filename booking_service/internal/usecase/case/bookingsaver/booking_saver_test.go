@@ -3,7 +3,6 @@ package bookingsaver
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"os"
 	"testing"
@@ -20,24 +19,33 @@ import (
 )
 
 var (
-	testWebhookHandler       = "webhookHandler"
-	testDurations            = [][]time.Time{{time.Date(2025, 10, 10, 0, 0, 0, 0, time.UTC), time.Date(2025, 10, 11, 0, 0, 0, 0, time.UTC)}}
-	testHotelName      int64 = 1
-	testUserID               = "1"
-	testRoomNumber     int64 = 1
-	testUser                 = &userdomain.User{ID: testUserID}
-	testBooking              = &booking.Booking{UserID: testUserID, HotelID: testHotelName, RoomID: testRoomNumber, TotalPrice: 100, Currency: "USD", CheckIn: testDurations[0][0], CheckOut: testDurations[0][1], Status: booking.BookingStatusPaid, PaymentID: "1"}
-	testBookingInfo          = &object.BookingInfo{User: *testUser, HotelID: testHotelName, RoomID: testRoomNumber, CheckIn: testDurations[0][0], CheckOut: testDurations[0][1]}
-	testSaver          *BookingSaver
+	testWebhookHandler          = "webhookHandler"
+	testDurations               = [][]time.Time{{time.Date(2025, 10, 10, 0, 0, 0, 0, time.UTC), time.Date(2025, 10, 11, 0, 0, 0, 0, time.UTC)}}
+	testHotelName         int64 = 1
+	testUserID                  = "1"
+	testRoomNumber        int64 = 1
+	testUser                    = &userdomain.User{ID: testUserID}
+	testBooking                 = &booking.Booking{UserID: testUserID, HotelID: testHotelName, RoomID: testRoomNumber, TotalPrice: 100, Currency: "USD", CheckIn: testDurations[0][0], CheckOut: testDurations[0][1], Status: booking.BookingStatusPaid, PaymentID: "1"}
+	testBookingInfo             = &object.BookingInfo{User: *testUser, HotelID: testHotelName, RoomID: testRoomNumber, CheckIn: testDurations[0][0], CheckOut: testDurations[0][1]}
+	testSaver             *BookingSaver
+	errPaymentBeginFailed = errors.New("payment begin failed")
+	errSaveFailed         = errors.New("save failed")
+	errDeleteFailed       = errors.New("delete failed")
 )
 
 type MockBookRepo struct{}
 
 func (m *MockBookRepo) Save(ctx context.Context, booking *booking.Booking) error {
+	if booking.CheckIn.Year() != testBooking.CheckIn.Year() {
+		return errSaveFailed
+	}
 	return nil
 }
 
 func (m *MockBookRepo) Delete(ctx context.Context, booking *booking.Booking) error {
+	if booking.CheckIn.Year() != testBooking.CheckIn.Year() {
+		return errDeleteFailed
+	}
 	return nil
 }
 
@@ -49,10 +57,13 @@ func (m *MockBookRepo) IsIntersected(ctx context.Context, hotelName int64, hotel
 }
 
 func (m *MockBookRepo) GetByBookingInfo(ctx context.Context, bookingInfo *object.BookingInfo) (*booking.Booking, error) {
-	if bookingInfo.HotelID == testHotelName && bookingInfo.RoomID == testRoomNumber {
+	if bookingInfo.HotelID == testHotelName && bookingInfo.RoomID == testRoomNumber && bookingInfo.User.ID == testUserID {
 		return testBooking, nil
+	} else if bookingInfo.HotelID == testHotelName && bookingInfo.RoomID == testRoomNumber {
+		return &booking.Booking{RoomID: bookingInfo.RoomID, HotelID: bookingInfo.HotelID, UserID: bookingInfo.User.ID,
+			CheckIn: time.Date(2024, 10, 10, 0, 0, 0, 0, time.UTC)}, nil
 	}
-	return nil, fmt.Errorf("booking info not found")
+	return nil, error3.ErrBookingIsNotFound
 }
 
 func (m *MockBookRepo) GetByHotel(ctx context.Context, hotelName int64) ([]*booking.Booking, error) {
@@ -92,6 +103,10 @@ func (m *MockHotelRepo) GetRoomInfo(ctx context.Context, hotelName int64, roomNu
 type MockPaymentSender struct{}
 
 func (m *MockPaymentSender) SendPayment(ctx context.Context, info *payment.PaymentInfo) (*payment.PaymentResponse, error) {
+	if info.BookingInfo.User.ID != testUser.ID {
+		return &payment.PaymentResponse{}, errPaymentBeginFailed
+	}
+
 	return &payment.PaymentResponse{}, nil
 }
 
@@ -111,22 +126,36 @@ func TestMain(m *testing.M) {
 
 func TestBookingSaver_BookRoom(t *testing.T) {
 	ctx := context.Background()
-	_, err := testSaver.BookRoom(ctx, &object.BookingInfo{HotelID: 2})
+	_, err := testSaver.BookRoom(ctx, &object.BookingInfo{CheckIn: testDurations[0][1], CheckOut: testDurations[0][0]})
+	assert.Assert(t, errors.Is(err, error3.ErrTimeDurationIsNotValid))
+	_, err = testSaver.BookRoom(ctx, &object.BookingInfo{HotelID: 2})
 	assert.Assert(t, errors.Is(err, error3.ErrBookingIsIntersected), "book room error")
 	_, err = testSaver.BookRoom(ctx, &object.BookingInfo{HotelID: testHotelName, RoomID: 2})
 	assert.Equal(t, error2.ErrHotelRoomIsNotFound, err, "error must be not found")
+	_, err = testSaver.BookRoom(ctx, &object.BookingInfo{HotelID: testHotelName, RoomID: testRoomNumber, User: userdomain.User{}})
+	assert.Assert(t, errors.Is(err, errPaymentBeginFailed), "payment begin error")
+	_, err = testSaver.BookRoom(ctx, &object.BookingInfo{HotelID: testHotelName, RoomID: testRoomNumber, User: *testUser, CheckIn: time.Date(2024, 10, 10, 0, 0, 0, 0, time.UTC), CheckOut: time.Date(2024, 10, 11, 0, 0, 0, 0, time.UTC)})
+	assert.Assert(t, errors.Is(err, errSaveFailed), "save error")
 	_, err = testSaver.BookRoom(ctx, testBookingInfo)
 	assert.Assert(t, err == nil, "error should be nil")
 }
 
 func TestBookingSaver_ConfirmBooking(t *testing.T) {
 	ctx := context.Background()
-	err := testSaver.ConfirmBooking(ctx, testBookingInfo)
+	err := testSaver.ConfirmBooking(ctx, &object.BookingInfo{HotelID: testHotelName, RoomID: 2})
+	assert.Assert(t, errors.Is(err, error3.ErrBookingIsNotFound), "get booking error")
+	err = testSaver.ConfirmBooking(ctx, &object.BookingInfo{HotelID: testHotelName, RoomID: testRoomNumber})
+	assert.Assert(t, errors.Is(err, errSaveFailed), "save error")
+	err = testSaver.ConfirmBooking(ctx, testBookingInfo)
 	assert.Assert(t, err == nil, "error should be nil")
 }
 
 func TestBookingSaver_GetBookingInfo(t *testing.T) {
 	ctx := context.Background()
-	err := testSaver.DeleteBooking(ctx, testBookingInfo)
+	err := testSaver.DeleteBooking(ctx, &object.BookingInfo{HotelID: testHotelName, RoomID: 2})
+	assert.Assert(t, errors.Is(err, error3.ErrBookingIsNotFound), "get booking error")
+	err = testSaver.DeleteBooking(ctx, &object.BookingInfo{HotelID: testHotelName, RoomID: testRoomNumber})
+	assert.Assert(t, errors.Is(err, errDeleteFailed), "delete booking error")
+	err = testSaver.DeleteBooking(ctx, testBookingInfo)
 	assert.Assert(t, err == nil, "error should be nil")
 }

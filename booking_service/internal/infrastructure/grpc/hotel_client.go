@@ -7,7 +7,6 @@ import (
 	grpchotel "github.com/Vlad-Ali/MTSGolangProjectBooking-protos/gen/proto/hotel"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/hotel"
 	error2 "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/hotel/error"
-	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -17,8 +16,8 @@ type HotelClient struct {
 	logger *slog.Logger
 }
 
-func NewHotelClient(conn *grpc.ClientConn) *HotelClient {
-	return &HotelClient{client: grpchotel.NewHotelClient(conn), logger: slog.Default().With("component", "hotel_client")}
+func NewHotelClient(client grpchotel.HotelClient) *HotelClient {
+	return &HotelClient{client: client, logger: slog.Default().With("component", "hotel_client")}
 }
 
 func (h *HotelClient) IsHotelier(ctx context.Context, userID string, hotelID int64) (bool, error) {

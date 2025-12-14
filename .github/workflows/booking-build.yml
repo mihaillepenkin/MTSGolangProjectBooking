@@ -1,4 +1,4 @@
-name: build.yml
+name: booking-build.yml
 
 on:
   push:
@@ -29,8 +29,12 @@ jobs:
           go mod tidy
           go mod download
 
-      - name: Run tests
+      - name: Run tests with coverage
         working-directory: ${{ env.BOOKING_DIR }}
         run: |
-          echo "Running tests..."
-          go test -v -race ./...
+          echo "Running tests with coverage..."
+          
+          go test -v -race -coverprofile=coverage.out ./...
+          
+          echo "=== Test Coverage Summary ==="
+          go tool cover -func=coverage.out

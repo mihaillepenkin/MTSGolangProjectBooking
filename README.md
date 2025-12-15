@@ -1,6 +1,6 @@
 
 # MTSGolangProjectBooking
-#№ Auth Service API
+## Auth Service API
 
 
 Сервис аутентификации и управления пользователями для системы бронирования отелей. Предоставляет RESTful API для регистрации, аутентификации и управления пользователями с использованием JWT (JSON Web Tokens).

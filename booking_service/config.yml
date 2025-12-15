@@ -4,20 +4,20 @@ grpc:
   address: ":50051"
 http:
   address: ":8080"
-  host: "localhost"
+  host: "booking-service"
   port: "8080"
   read_timeout: "10s"
   write_timeout: "10s"
-  allowed_origins: ["http://localhost:8083"]
+  allowed_origins: ["http://payment-service:8083"]
   webhook_handler_endpoint: "/api/webhook-callback"
 payment_system:
-  create_endpoint: "localhost:8083/api/payment"
+  create_endpoint: "payment-service:8083/api/payment"
 postgres:
-  dsn: "postgresql://postgres:123@localhost:5432/booking?sslmode=disable"
+  dsn: "postgresql://postgres:123@booking-postgres:5432/booking?sslmode=disable"
   max_connections: 25
   max_idle_connections: 10
   conn_max_lifetime: "30m"
   conn_max_idle_time: "5m"
 kafka:
-  address: "localhost:9092"
+  address: "kafka:9092"
   topic: "my-topic"

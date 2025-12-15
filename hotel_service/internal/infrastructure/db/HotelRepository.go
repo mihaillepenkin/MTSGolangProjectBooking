@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"errors"
 	"hotel_service/internal/application/dto/request"
 	"hotel_service/internal/domain/entity"
 	"log/slog"
@@ -16,10 +15,10 @@ func (hr *HotelRepository) Initialize(db *sql.DB) {
 	hr.Db = db
 }
 
-func (hr *HotelRepository) CheckIfHotelExists(hotelName string, hotelLocation string) error {
+func (hr *HotelRepository) CheckIfHotelExists(hotelName string, hotelLocation string) (bool, error) {
 	tx, err := hr.Db.Begin()
 	if err != nil {
-		return err
+		return false, err
 	}
 	defer func(tx *sql.Tx) {
 		err := tx.Rollback()
@@ -33,20 +32,20 @@ func (hr *HotelRepository) CheckIfHotelExists(hotelName string, hotelLocation st
 	var location string
 	err = row.Scan(&name, &location)
 	if err != nil {
-		return err
+		return false, nil
 	}
 	err = tx.Commit()
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	return nil
+	return true, nil
 }
 
-func (hr *HotelRepository) CheckHotelOwner(hotelId int64, userId int64) error {
+func (hr *HotelRepository) CheckHotelOwner(hotelId int64, userId int64) (bool, error) {
 	tx, err := hr.Db.Begin()
 	if err != nil {
-		return err
+		return false, err
 	}
 	defer func(tx *sql.Tx) {
 		err := tx.Rollback()
@@ -59,18 +58,18 @@ func (hr *HotelRepository) CheckHotelOwner(hotelId int64, userId int64) error {
 	var ownerId int64
 	err = row.Scan(&ownerId)
 	if err != nil {
-		return err
+		return false, err
 	}
 	err = tx.Commit()
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	if ownerId != userId {
-		return errors.New("user is not hotel owner")
+		return false, nil
 	}
 
-	return nil
+	return true, nil
 }
 
 func (hr *HotelRepository) GetAllHotels() ([]entity.Hotel, error) {

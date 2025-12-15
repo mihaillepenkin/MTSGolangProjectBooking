@@ -34,7 +34,7 @@ func (hs *HotelService) GetAllHotels() (response.AllHotelsInfoResponseDto, error
 		result[i].Rooms = rooms
 	}
 
-	return response.AllHotelsInfoResponseDto{Hotels: result, Message: "", Error: ""}, nil
+	return response.AllHotelsInfoResponseDto{Hotels: result, Message: "Список отелей получен успешно", Error: ""}, nil
 }
 
 func (hs *HotelService) AddHotelInfo(hotelInfo *request.HotelInfoAdditionRequestDto, userId int64) (response.HotelInfoResponseDto, error) {
@@ -61,7 +61,7 @@ func (hs *HotelService) AddHotelInfo(hotelInfo *request.HotelInfoAdditionRequest
 		rooms[j] = response.Room{Id: room.Id, Number: room.Number, Price: room.Price}
 	}
 
-	return response.HotelInfoResponseDto{Id: hotel.Id, Name: hotel.Name, Location: hotel.Location, OwnerId: hotel.OwnerId, Rooms: rooms, Message: "", Error: ""}, nil
+	return response.HotelInfoResponseDto{Id: hotel.Id, Name: hotel.Name, Location: hotel.Location, OwnerId: hotel.OwnerId, Rooms: rooms, Message: "Отель успешно добавлен", Error: ""}, nil
 }
 
 func (hs *HotelService) UpdateHotelInfo(newHotelInfo *request.HotelInfoUpdateRequestDto, userId int64) (response.HotelInfoResponseDto, error) {
@@ -85,5 +85,5 @@ func (hs *HotelService) UpdateHotelInfo(newHotelInfo *request.HotelInfoUpdateReq
 		roomsUpd[i] = response.Room{Id: room.Id, Number: room.Number, Price: room.Price}
 	}
 
-	return response.HotelInfoResponseDto{Id: hotelUpd.Id, Name: hotelUpd.Name, Location: hotelUpd.Location, OwnerId: hotelUpd.OwnerId, Rooms: roomsUpd, Message: "", Error: ""}, nil
+	return response.HotelInfoResponseDto{Id: hotelUpd.Id, Name: hotelUpd.Name, Location: hotelUpd.Location, OwnerId: hotelUpd.OwnerId, Rooms: roomsUpd, Message: "Информация об отеле успешно обновлена", Error: ""}, nil
 }

@@ -74,6 +74,7 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+        
   booking-postgres:
     image: postgres:16-alpine
     container_name: booking-postgres
@@ -125,7 +126,6 @@ services:
     networks:
       - booking-network
 
-
   booking-grafana:
     image: grafana/grafana:12.3.0
     container_name: booking-grafana
@@ -158,8 +158,49 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  hotel-postgres:
+      image: postgres:16-alpine
+      container_name: hotel-postgres
+      restart: unless-stopped
+      ports:
+        - "5432:5432"
+      environment:
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+        POSTGRES_NAME: hotels_data
+      volumes:
+        - hotel-postgres-data:/var/lib/postgresql/data
+      networks:
+        - booking-network
+      logging:
+        driver: "local"
+        options:
+          max-size: "10m"
+          max-file: "3"
+
+  hotel-service:
+    build: ./hotel-service
+    container_name: hotel-service
+    restart: unless-stopped
+    ports:
+      - "8082:8082"
+    volumes:
+      - ./hotel-service/config.yml:/app/config.yml
+      - ./hotel-service/migrations:/app/migrations
+    depends_on:
+      - hotel-postgres
+    networks:
+      - booking-network
+    command: ["./app"]
+    logging:
+      driver: "local"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 volumes:
   booking-postgres-data:
+  hotel-postgres-data:
   prometheus-data:
   grafana-data:
   kafka-data:

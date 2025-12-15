@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"errors"
 	"hotel_service/internal/application/dto/request"
 	"hotel_service/internal/domain/entity"
 	"log/slog"
@@ -16,10 +15,10 @@ func (hr *HotelRepository) Initialize(db *sql.DB) {
 	hr.Db = db
 }
 
-func (hr *HotelRepository) CheckIfHotelExists(hotelName string, hotelLocation string) error {
+func (hr *HotelRepository) CheckIfHotelExists(hotelName string, hotelLocation string) (bool, error) {
 	tx, err := hr.Db.Begin()
 	if err != nil {
-		return err
+		return false, err
 	}
 	defer func(tx *sql.Tx) {
 		err := tx.Rollback()
@@ -33,20 +32,20 @@ func (hr *HotelRepository) CheckIfHotelExists(hotelName string, hotelLocation st
 	var location string
 	err = row.Scan(&name, &location)
 	if err != nil {
-		return err
+		return false, nil
 	}
 	err = tx.Commit()
 	if err != nil {
-		return err
+		return false, err
 	}
 
-	return nil
+	return true, nil
 }
 
-func (hr *HotelRepository) CheckHotelOwner(hotelId int64, userId int64) error {
+func (hr *HotelRepository) CheckHotelOwner(hotelId int64, userId int64) (bool, error) {
 	tx, err := hr.Db.Begin()
 	if err != nil {
-		return err
+		return false, err
 	}
 	defer func(tx *sql.Tx) {
 		err := tx.Rollback()
@@ -59,21 +58,21 @@ func (hr *HotelRepository) CheckHotelOwner(hotelId int64, userId int64) error {
 	var ownerId int64
 	err = row.Scan(&ownerId)
 	if err != nil {
-		return err
+		return false, err
 	}
 	err = tx.Commit()
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	if ownerId != userId {
-		return errors.New("user is not hotel owner")
+		return false, nil
 	}
 
-	return nil
+	return true, nil
 }
 
-func (hr *HotelRepository) GetAllHotels() ([]entity.Hotel, error) {
+func (hr *HotelRepository) GetAllHotels() ([]*entity.Hotel, error) {
 	tx, err := hr.Db.Begin()
 	if err != nil {
 		return nil, err
@@ -85,7 +84,7 @@ func (hr *HotelRepository) GetAllHotels() ([]entity.Hotel, error) {
 		}
 	}(tx)
 
-	hotels := make([]entity.Hotel, 0)
+	hotels := make([]*entity.Hotel, 0)
 	rows, err := tx.Query("SELECT id, name, description, location, owner_id FROM hotels")
 	if err != nil {
 		return nil, err
@@ -96,7 +95,7 @@ func (hr *HotelRepository) GetAllHotels() ([]entity.Hotel, error) {
 		if err != nil {
 			return nil, err
 		}
-		hotels = append(hotels, hotel)
+		hotels = append(hotels, &hotel)
 	}
 
 	rooms := make(map[int64][]entity.Room)
@@ -137,11 +136,7 @@ func (hr *HotelRepository) AddHotelInfo(name string, description string, locatio
 	}(tx)
 
 	hotel := entity.Hotel{Name: name, Description: description, Location: location, OwnerId: ownerId}
-	result, err := tx.Exec("INSERT INTO hotels (name, description, location, owner_id) VALUES ($1, $2, $3, $4)", hotel.Name, hotel.Description, hotel.Location, hotel.OwnerId)
-	if err != nil {
-		return entity.Hotel{}, err
-	}
-	hotel.Id, err = result.LastInsertId()
+	err = tx.QueryRow("INSERT INTO hotels (name, description, location, owner_id) VALUES ($1, $2, $3, $4) RETURNING id", hotel.Name, hotel.Description, hotel.Location, hotel.OwnerId).Scan(&hotel.Id)
 	if err != nil {
 		return entity.Hotel{}, err
 	}
@@ -149,11 +144,7 @@ func (hr *HotelRepository) AddHotelInfo(name string, description string, locatio
 	roomsEnt := make([]entity.Room, 0)
 	for _, room := range rooms {
 		roomEnt := entity.Room{Number: room.Number, Price: room.Price, HotelId: hotel.Id}
-		result, err := tx.Exec("INSERT INTO rooms (number, price, hotel_id) VALUES ($1, $2, $3)", roomEnt.Number, roomEnt.Price, roomEnt.HotelId)
-		if err != nil {
-			return entity.Hotel{}, err
-		}
-		roomEnt.Id, err = result.LastInsertId()
+		err := tx.QueryRow("INSERT INTO rooms (number, price, hotel_id) VALUES ($1, $2, $3) RETURNING id", roomEnt.Number, roomEnt.Price, roomEnt.HotelId).Scan(&roomEnt.Id)
 		if err != nil {
 			return entity.Hotel{}, err
 		}

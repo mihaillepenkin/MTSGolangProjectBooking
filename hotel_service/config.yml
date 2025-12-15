@@ -5,7 +5,7 @@ postgres:
   conn_max_lifetime: "30m"
   conn_max_idle_time: "5m"
 grpc:
-  address: ":9090"
+  address: ":50051"
 http:
   address: ":8082"
   host: "localhost"

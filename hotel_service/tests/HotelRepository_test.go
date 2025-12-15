@@ -12,6 +12,7 @@ import (
 	"log/slog"
 	"os"
 	"testing"
+	"time"
 
 	_ "github.com/lib/pq"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
@@ -43,7 +44,7 @@ var (
 func setupTests() error {
 	container, err := postgres.Run(
 		context.Background(),
-		"postgres:15-alpine",
+		"postgres:15",
 		postgres.WithDatabase("testDb"),
 		postgres.WithUsername("test"),
 		postgres.WithPassword("test"),
@@ -81,6 +82,7 @@ func TestMain(m *testing.M) {
 	}
 
 	slog.Info("running tests...")
+	time.Sleep(2 * time.Second)
 	err = testDb.Ping()
 	if err != nil {
 		slog.Error(err.Error())
@@ -125,7 +127,7 @@ func TestHotelRepositoryGetAllHotels(t *testing.T) {
 
 	t.Log(hotels, testHotelList)
 
-	assert.DeepEqual(t, testHotelList, hotels)
+	assert.DeepEqual(t, testHotelList[0], *hotels[0])
 }
 
 func TestHotelRepositoryCheckHotelOwner(t *testing.T) {

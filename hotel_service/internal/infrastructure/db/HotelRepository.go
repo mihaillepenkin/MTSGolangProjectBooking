@@ -72,7 +72,7 @@ func (hr *HotelRepository) CheckHotelOwner(hotelId int64, userId int64) (bool, e
 	return true, nil
 }
 
-func (hr *HotelRepository) GetAllHotels() ([]entity.Hotel, error) {
+func (hr *HotelRepository) GetAllHotels() ([]*entity.Hotel, error) {
 	tx, err := hr.Db.Begin()
 	if err != nil {
 		return nil, err
@@ -84,7 +84,7 @@ func (hr *HotelRepository) GetAllHotels() ([]entity.Hotel, error) {
 		}
 	}(tx)
 
-	hotels := make([]entity.Hotel, 0)
+	hotels := make([]*entity.Hotel, 0)
 	rows, err := tx.Query("SELECT id, name, description, location, owner_id FROM hotels")
 	if err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func (hr *HotelRepository) GetAllHotels() ([]entity.Hotel, error) {
 		if err != nil {
 			return nil, err
 		}
-		hotels = append(hotels, hotel)
+		hotels = append(hotels, &hotel)
 	}
 
 	rooms := make(map[int64][]entity.Room)
@@ -136,11 +136,7 @@ func (hr *HotelRepository) AddHotelInfo(name string, description string, locatio
 	}(tx)
 
 	hotel := entity.Hotel{Name: name, Description: description, Location: location, OwnerId: ownerId}
-	result, err := tx.Exec("INSERT INTO hotels (name, description, location, owner_id) VALUES ($1, $2, $3, $4)", hotel.Name, hotel.Description, hotel.Location, hotel.OwnerId)
-	if err != nil {
-		return entity.Hotel{}, err
-	}
-	hotel.Id, err = result.LastInsertId()
+	err = tx.QueryRow("INSERT INTO hotels (name, description, location, owner_id) VALUES ($1, $2, $3, $4) RETURNING id", hotel.Name, hotel.Description, hotel.Location, hotel.OwnerId).Scan(&hotel.Id)
 	if err != nil {
 		return entity.Hotel{}, err
 	}
@@ -148,11 +144,7 @@ func (hr *HotelRepository) AddHotelInfo(name string, description string, locatio
 	roomsEnt := make([]entity.Room, 0)
 	for _, room := range rooms {
 		roomEnt := entity.Room{Number: room.Number, Price: room.Price, HotelId: hotel.Id}
-		result, err := tx.Exec("INSERT INTO rooms (number, price, hotel_id) VALUES ($1, $2, $3)", roomEnt.Number, roomEnt.Price, roomEnt.HotelId)
-		if err != nil {
-			return entity.Hotel{}, err
-		}
-		roomEnt.Id, err = result.LastInsertId()
+		err := tx.QueryRow("INSERT INTO rooms (number, price, hotel_id) VALUES ($1, $2, $3) RETURNING id", roomEnt.Number, roomEnt.Price, roomEnt.HotelId).Scan(&roomEnt.Id)
 		if err != nil {
 			return entity.Hotel{}, err
 		}

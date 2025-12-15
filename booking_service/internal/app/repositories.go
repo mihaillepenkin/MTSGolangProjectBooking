@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	hotel3 "github.com/Vlad-Ali/MTSGolangProjectBooking-protos/gen/proto/hotel"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/config/payment"
 	bookingdomain "github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/booking"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/hotel"
@@ -27,7 +28,8 @@ type Repositories struct {
 
 func NewRepositories(db *sql.DB, cfg paymentconfig.PaymentConfig, conn *grpc.ClientConn, writer *kafka.Writer) *Repositories {
 	bookingRepo := postgres.NewBookingRepository(db)
-	hotelRepo := hotel2.NewHotelClient(conn)
+	hotelClient := hotel3.NewHotelClient(conn)
+	hotelRepo := hotel2.NewHotelClient(hotelClient)
 	paymentSender := payment2.NewPaymentSender(&http.Client{Timeout: 30 * time.Second}, cfg.CreateEndpoint)
 	producer := kafka2.NewKafkaProducer(writer)
 	return &Repositories{bookingRepo, hotelRepo, paymentSender, producer}

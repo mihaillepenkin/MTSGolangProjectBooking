@@ -3,7 +3,6 @@ package grpc
 import (
 	"context"
 	"log"
-	"log/slog"
 	"os"
 	"testing"
 
@@ -34,10 +33,18 @@ func (*MockClient) IsHotelier(ctx context.Context, in *hotel.IsHotelierRequest, 
 		return &hotel.IsHotelierResponse{IsHotelier: true}, nil
 	}
 
+	if hotelID != in.HotelID {
+		return nil, status.Error(codes.NotFound, "Hotel not found")
+	}
+
 	return &hotel.IsHotelierResponse{IsHotelier: false}, nil
 }
 
 func (*MockClient) GetRoomInfo(ctx context.Context, in *hotel.RoomInfoRequest, opts ...grpc.CallOption) (*hotel.RoomInfoResponse, error) {
+	value := ctx.Value("key")
+	if value != nil {
+		return nil, status.Error(codes.Internal, "failed to get room info")
+	}
 	if in.RoomID < 0 || in.HotelID < 0 {
 		return nil, status.Error(codes.InvalidArgument, "Request is invalid")
 	}
@@ -50,7 +57,7 @@ func (*MockClient) GetRoomInfo(ctx context.Context, in *hotel.RoomInfoRequest, o
 }
 
 func TestMain(m *testing.M) {
-	testHotelClient = &HotelClient{client: &MockClient{}, logger: slog.Default().With("component", "hotel_client")}
+	testHotelClient = NewHotelClient(&MockClient{})
 	log.Println("Running tests...")
 	code := m.Run()
 	os.Exit(code)
@@ -64,9 +71,15 @@ func TestHotelClient_ShouldReturnInvalidArgumentErrForIsHotelier(t *testing.T) {
 
 func TestHotelClient_ShouldReturnFalseForIsHotelier(t *testing.T) {
 	ctx := context.Background()
-	isHotelier, err := testHotelClient.IsHotelier(ctx, userID, 2)
+	isHotelier, err := testHotelClient.IsHotelier(ctx, "2", 1)
 	assert.Assert(t, err == nil, "expected err to be nil")
 	assert.Assert(t, isHotelier == false, "expected isHotelier to be false")
+}
+
+func TestHotelClient_ShouldReturnErrorIsHotelier(t *testing.T) {
+	ctx := context.Background()
+	_, err := testHotelClient.IsHotelier(ctx, userID, 2)
+	assert.Assert(t, err != nil, "expected err to be not nil")
 }
 
 func TestHotelClient_ShouldReturnTrueIsHotelier(t *testing.T) {
@@ -86,6 +99,13 @@ func TestHotelClient_ShouldReturnNotFoundErrForGetRoomInfo(t *testing.T) {
 	ctx := context.Background()
 	_, err := testHotelClient.GetRoomInfo(ctx, hotelID, 2)
 	assert.Equal(t, error2.ErrHotelRoomIsNotFound, err, "expected NotFoundErr")
+}
+
+func TestHotelClient_ShouldReturnErrForGetRoomInfo(t *testing.T) {
+	ctx := context.Background()
+	ctx = context.WithValue(ctx, "key", "value")
+	_, err := testHotelClient.GetRoomInfo(ctx, hotelID, hotelID)
+	assert.Assert(t, err != nil, "expected err to be not nil")
 }
 
 func TestHotelClient_GetRoomInfo(t *testing.T) {

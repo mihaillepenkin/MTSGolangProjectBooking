@@ -5,7 +5,7 @@ type Status string
 const (
 	StatusOK             Status = "ok"
 	StatusError          Status = "error"
-	BookingOperationType        = "postgres"
+	BookingOperationType        = "booking"
 )
 
 type Message struct {

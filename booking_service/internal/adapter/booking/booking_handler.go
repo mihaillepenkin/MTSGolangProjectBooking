@@ -98,7 +98,7 @@ func (b *BookingHandler) GetHotelBookings(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	hotelName, err := GetHotelNameFromRequest(r)
+	hotelName, err := GetHotelIDFromRequest(r)
 	if err != nil {
 		b.logger.Error("Invalid hotel booking name")
 		http.Error(w, "Invalid hotel parameter", http.StatusBadRequest)
@@ -159,14 +159,14 @@ func (b *BookingHandler) GetUserBookings(w http.ResponseWriter, r *http.Request)
 }
 
 func (b *BookingHandler) GetOccupiedRoomDurations(w http.ResponseWriter, r *http.Request) {
-	hotelName, err := GetHotelNameFromRequest(r)
+	hotelName, err := GetHotelIDFromRequest(r)
 	if err != nil {
 		b.logger.Error("Invalid hotel booking name")
 		http.Error(w, "Invalid hotel parameter", http.StatusBadRequest)
 		return
 	}
 
-	roomNumber, err := GetRoomNumberFromRequest(r)
+	roomNumber, err := GetRoomIDFromRequest(r)
 	if err != nil {
 		b.logger.Error("Invalid room number ")
 		http.Error(w, "Invalid room number", http.StatusBadRequest)
@@ -190,12 +190,12 @@ func (b *BookingHandler) GetOccupiedRoomDurations(w http.ResponseWriter, r *http
 	}
 }
 
-func GetHotelNameFromRequest(r *http.Request) (int64, error) {
+func GetHotelIDFromRequest(r *http.Request) (int64, error) {
 	num, err := strconv.ParseInt(r.URL.Query().Get("hotelID"), 10, 64)
 	return num, err
 }
 
-func GetRoomNumberFromRequest(r *http.Request) (int64, error) {
-	num, err := strconv.ParseInt(r.URL.Query().Get("roomNumber"), 10, 64)
+func GetRoomIDFromRequest(r *http.Request) (int64, error) {
+	num, err := strconv.ParseInt(r.URL.Query().Get("roomID"), 10, 64)
 	return num, err
 }

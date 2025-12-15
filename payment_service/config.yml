@@ -1,7 +1,7 @@
 secret_key: "payment-secret"
 http:
   address: ":8083"
-  host: "payment-service"
+  host: "localhost"
   port: "8083"
   allowed_origins: ["http://booking-service:8080"]
   read_timeout: "10s"

@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	ProcessEndpoint = "/api/http/process"
+	ProcessEndpoint = "/api/payment/process"
 )
 
 type PaymentHandler struct {

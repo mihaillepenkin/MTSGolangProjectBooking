@@ -226,7 +226,7 @@ func TestBookingHandler_GetRoomDurations(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		url := testServer.URL + GetRoomDurationsEndpoint + "?hotelID=" + test.hotelID + "&roomNumber=" + test.roomNumber
+		url := testServer.URL + GetRoomDurationsEndpoint + "?hotelID=" + test.hotelID + "&roomID=" + test.roomNumber
 		req, err := http.NewRequest(http.MethodGet, url, nil)
 		if err != nil {
 			t.Fatal("Error creating request", err)

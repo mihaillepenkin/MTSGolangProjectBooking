@@ -1,5 +1,3 @@
-jwt:
-  secret_key: "secret"
 grpc:
   address: ":50051"
 http:

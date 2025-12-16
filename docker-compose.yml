@@ -75,7 +75,6 @@ services:
         max-size: "10m"
         max-file: "3"
 
-
   booking-postgres:
     image: postgres:16-alpine
     container_name: booking-postgres
@@ -101,7 +100,7 @@ services:
     container_name: booking-service
     restart: unless-stopped
     ports:
-      - "8080:8080"
+      - "8087:8080"
     environment:
       JWT_SECRET: ${JWT_SECRET}
     volumes:
@@ -187,6 +186,8 @@ services:
     restart: unless-stopped
     ports:
       - "8082:8082"
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
     volumes:
       - ./hotel_service/config.yml:/app/config.yml
       - ./hotel_service/migrations:/app/migrations

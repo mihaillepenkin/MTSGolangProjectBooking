@@ -14,7 +14,7 @@ import (
 
 func main() {
 	textHandler := slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
-		Level: slog.LevelError,
+		Level: slog.LevelDebug,
 	})
 	logger := slog.New(textHandler)
 	slog.SetDefault(logger)

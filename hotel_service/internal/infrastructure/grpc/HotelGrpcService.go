@@ -16,8 +16,9 @@ type HotelGrpcService struct {
 	hotel.UnimplementedHotelServer
 }
 
-func (hgs *HotelGrpcService) Initialize(db *sql.DB) {
-	hgs.hotelGrpcRepository.Initialize(db)
+func (hgs *HotelGrpcService) Initialize(database *sql.DB) {
+	hgs.hotelGrpcRepository = &db.HotelGrpcRepository{}
+	hgs.hotelGrpcRepository.Initialize(database)
 }
 
 func (hgs *HotelGrpcService) IsHotelier(ctx context.Context, r *hotel.IsHotelierRequest) (*hotel.IsHotelierResponse, error) {

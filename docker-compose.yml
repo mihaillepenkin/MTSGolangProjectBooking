@@ -75,6 +75,7 @@ services:
         max-size: "10m"
         max-file: "3"
 
+
   booking-postgres:
     image: postgres:16-alpine
     container_name: booking-postgres

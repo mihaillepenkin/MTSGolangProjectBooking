@@ -2,6 +2,7 @@ package config
 
 import (
 	"database/sql"
+	"errors"
 	grpc2 "hotel_service/internal/infrastructure/grpc"
 	"log/slog"
 	"net"
@@ -11,14 +12,16 @@ import (
 	"github.com/Vlad-Ali/MTSGolangProjectBooking-protos/gen/proto/hotel"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
 	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
-	postgresConfig PostgresConfig `yaml:"postgres"`
-	grpcConfig     GrpcConfig     `yaml:"grpc"`
-	httpConfig     HttpConfig     `yaml:"http"`
+	PostgresConfig PostgresConfig `yaml:"postgres"`
+	GrpcConfig     GrpcConfig     `yaml:"grpc"`
+	HttpConfig     HttpConfig     `yaml:"http"`
 }
 
 func LoadConfig() *Config {
@@ -40,21 +43,21 @@ func LoadConfig() *Config {
 }
 
 func (cfg *Config) ConnectToDb() *sql.DB {
-	db, err := sql.Open("postgres", cfg.postgresConfig.Dsn)
+	db, err := sql.Open("postgres", cfg.PostgresConfig.Dsn)
 	if err != nil {
-		slog.Error(err.Error())
+		slog.Error(err.Error(), "DSN", cfg.PostgresConfig.Dsn)
 		return nil
 	}
-	defer func(db *sql.DB) {
+	/*defer func(db *sql.DB) {
 		err := db.Close()
 		if err != nil {
-			slog.Error(err.Error())
+			slog.Error(err.Error(), "DSN", cfg.PostgresConfig.Dsn)
 		}
-	}(db)
+	}(db)*/
 
 	err = db.Ping()
 	if err != nil {
-		slog.Error(err.Error())
+		slog.Error(err.Error(), "DSN", cfg.PostgresConfig.Dsn)
 		return nil
 	} else {
 		slog.Info("Successfully connected to database")
@@ -76,7 +79,7 @@ func (cfg *Config) RunMigrations(db *sql.DB) error {
 		return err
 	}
 	err = m.Up()
-	if err != nil {
+	if err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		slog.Error(err.Error())
 		return err
 	}
@@ -95,7 +98,7 @@ func (cfg *Config) ConfigureGrpcServer(hotelGrpcService *grpc2.HotelGrpcService)
 	grpcServer := grpc.NewServer()
 	hotel.RegisterHotelServer(grpcServer, hotelGrpcService)
 
-	listener, err := net.Listen("tcp", cfg.grpcConfig.Address)
+	listener, err := net.Listen("tcp", cfg.GrpcConfig.Address)
 	if err != nil {
 		slog.Error(err.Error())
 		return nil, nil
@@ -107,10 +110,10 @@ func (cfg *Config) ConfigureGrpcServer(hotelGrpcService *grpc2.HotelGrpcService)
 
 func (cfg *Config) ConfigureHttpServer(handler *http.Handler) *http.Server {
 	server := &http.Server{
-		Addr:         cfg.httpConfig.Address,
+		Addr:         cfg.HttpConfig.Address,
 		Handler:      *handler,
-		ReadTimeout:  cfg.httpConfig.ReadTimeout,
-		WriteTimeout: cfg.httpConfig.WriteTimeout,
+		ReadTimeout:  cfg.HttpConfig.ReadTimeout,
+		WriteTimeout: cfg.HttpConfig.WriteTimeout,
 	}
 
 	slog.Info("Successfully configured http server")

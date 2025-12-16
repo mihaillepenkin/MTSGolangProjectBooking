@@ -18,8 +18,8 @@ type Config struct {
 	PostgresConfig postgresconfig.PostgresConfig `yaml:"postgres"`
 	GRPCConfig     grpcconfig.GRPCConfig         `yaml:"grpc"`
 	PaymentConfig  paymentconfig.PaymentConfig   `yaml:"payment_system"`
-	JWTConfig      jwtconfig.JWTConfig           `yaml:"jwt"`
-	KafkaConfig    kafkaconfig.KafkaConfig       `yaml:"kafka"`
+	JWTConfig      jwtconfig.JWTConfig
+	KafkaConfig    kafkaconfig.KafkaConfig `yaml:"kafka"`
 }
 
 func LoadConfig(path string) (*Config, error) {
@@ -32,5 +32,6 @@ func LoadConfig(path string) (*Config, error) {
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return nil, fmt.Errorf("error parsing config file: %v", err)
 	}
+	config.JWTConfig = jwtconfig.JWTConfig{SecretKey: os.Getenv("JWT_SECRET")}
 	return &config, nil
 }

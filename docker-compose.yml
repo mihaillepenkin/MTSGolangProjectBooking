@@ -62,7 +62,7 @@ services:
       - DB_USER=postgres
       - DB_PASSWORD=123
       - DB_NAME=booking
-      - JWT_SECRET=your_strong_jwt_secret_here
+      - JWT_SECRET=${JWT_SECRET}
       - PORT=8081
     depends_on:
       - booking-postgres
@@ -74,13 +74,13 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-        
+
   booking-postgres:
     image: postgres:16-alpine
     container_name: booking-postgres
     restart: unless-stopped
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: 123
@@ -101,6 +101,8 @@ services:
     restart: unless-stopped
     ports:
       - "8080:8080"
+    environment:
+      JWT_SECRET: ${JWT_SECRET}
     volumes:
       - ./booking_service/config.yml:/app/config.yml
       - ./booking_service/migrations:/app/migrations
@@ -167,7 +169,7 @@ services:
       environment:
         POSTGRES_USER: postgres
         POSTGRES_PASSWORD: postgres
-        POSTGRES_NAME: hotels_data
+        POSTGRES_DB: hotels_data
       volumes:
         - hotel-postgres-data:/var/lib/postgresql/data
       networks:
@@ -179,14 +181,14 @@ services:
           max-file: "3"
 
   hotel-service:
-    build: ./hotel-service
+    build: ./hotel_service
     container_name: hotel-service
     restart: unless-stopped
     ports:
       - "8082:8082"
     volumes:
-      - ./hotel-service/config.yml:/app/config.yml
-      - ./hotel-service/migrations:/app/migrations
+      - ./hotel_service/config.yml:/app/config.yml
+      - ./hotel_service/migrations:/app/migrations
     depends_on:
       - hotel-postgres
     networks:

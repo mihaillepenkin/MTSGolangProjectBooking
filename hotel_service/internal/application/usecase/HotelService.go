@@ -10,11 +10,12 @@ import (
 )
 
 type HotelService struct {
-	hotelRepository db.HotelRepository
+	hotelRepository *db.HotelRepository
 }
 
-func (hs *HotelService) Initialize(db *sql.DB) {
-	hs.hotelRepository.Initialize(db)
+func (hs *HotelService) Initialize(dbp *sql.DB) {
+	hs.hotelRepository = &db.HotelRepository{}
+	hs.hotelRepository.Initialize(dbp)
 }
 
 func (hs *HotelService) GetAllHotels() (response.AllHotelsInfoResponseDto, error) {

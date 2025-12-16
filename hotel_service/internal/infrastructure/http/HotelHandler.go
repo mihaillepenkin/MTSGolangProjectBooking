@@ -10,10 +10,11 @@ import (
 )
 
 type HotelHandler struct {
-	hotelService usecase.HotelService
+	hotelService *usecase.HotelService
 }
 
 func (hh *HotelHandler) Initialize(db *sql.DB) {
+	hh.hotelService = &usecase.HotelService{}
 	hh.hotelService.Initialize(db)
 }
 

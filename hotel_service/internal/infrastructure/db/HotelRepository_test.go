@@ -1,4 +1,4 @@
-package tests
+package db
 
 import (
 	"context"
@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"hotel_service/internal/application/dto/request"
 	"hotel_service/internal/domain/entity"
-	"hotel_service/internal/infrastructure/db"
 	"log"
 	"log/slog"
 	"os"
@@ -21,7 +20,7 @@ import (
 
 var (
 	testDb        *sql.DB
-	testRepo      *db.HotelRepository
+	testRepo      *HotelRepository
 	testHotelInfo = entity.Hotel{
 		Id:          1,
 		Name:        "Hotel 1",
@@ -48,7 +47,7 @@ func setupTests() error {
 		postgres.WithDatabase("testDb"),
 		postgres.WithUsername("test"),
 		postgres.WithPassword("test"),
-		postgres.WithInitScripts("../migrations/001__create_tables.up.sql"),
+		postgres.WithInitScripts("../../../migrations/001__create_tables.up.sql"),
 	)
 	if err != nil {
 		slog.Error(err.Error())
@@ -69,7 +68,7 @@ func setupTests() error {
 	}
 
 	testDb = dbT
-	testRepo = &db.HotelRepository{Db: testDb}
+	testRepo = &HotelRepository{Db: testDb}
 
 	return nil
 }

@@ -18,4 +18,4 @@ postgres:
   conn_max_idle_time: "5m"
 kafka:
   address: "kafka:9092"
-  topic: "my-topic"
+  topic: "booking-events"

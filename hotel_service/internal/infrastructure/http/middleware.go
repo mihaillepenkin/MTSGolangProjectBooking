@@ -59,7 +59,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 			}
 
-			return []byte(os.Getenv("JWT_SECRET_KEY")), nil
+			return []byte(os.Getenv("JWT_SECRET")), nil
 		})
 		if err != nil {
 			http.Error(w, "token validation error", http.StatusUnauthorized)

@@ -42,7 +42,7 @@ func (hr *HotelRepository) CheckIfHotelExists(hotelName string, hotelLocation st
 	return true, nil
 }
 
-func (hr *HotelRepository) CheckHotelOwner(hotelId int64, userId int64) (bool, error) {
+func (hr *HotelRepository) CheckHotelOwner(hotelId int64, userId string) (bool, error) {
 	tx, err := hr.Db.Begin()
 	if err != nil {
 		return false, err
@@ -55,7 +55,7 @@ func (hr *HotelRepository) CheckHotelOwner(hotelId int64, userId int64) (bool, e
 	}(tx)
 
 	row := tx.QueryRow("SELECT owner_id FROM hotels WHERE id = $1", hotelId)
-	var ownerId int64
+	var ownerId string
 	err = row.Scan(&ownerId)
 	if err != nil {
 		return false, err
@@ -123,7 +123,7 @@ func (hr *HotelRepository) GetAllHotels() ([]*entity.Hotel, error) {
 	return hotels, nil
 }
 
-func (hr *HotelRepository) AddHotelInfo(name string, description string, location string, ownerId int64, rooms []request.Room) (entity.Hotel, error) {
+func (hr *HotelRepository) AddHotelInfo(name string, description string, location string, ownerId string, rooms []request.Room) (entity.Hotel, error) {
 	tx, err := hr.Db.Begin()
 	if err != nil {
 		return entity.Hotel{}, err
@@ -160,7 +160,7 @@ func (hr *HotelRepository) AddHotelInfo(name string, description string, locatio
 	return hotel, nil
 }
 
-func (hr *HotelRepository) UpdateHotelInfo(id int64, newName string, newDescription string, newLocation string, newOwnerId int64, newRooms []request.RoomUpd) (entity.Hotel, error) {
+func (hr *HotelRepository) UpdateHotelInfo(id int64, newName string, newDescription string, newLocation string, newOwnerId string, newRooms []request.RoomUpd) (entity.Hotel, error) {
 	tx, err := hr.Db.Begin()
 	if err != nil {
 		return entity.Hotel{}, err

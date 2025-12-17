@@ -11,6 +11,6 @@ type HotelInfoUpdateRequestDto struct {
 	NewName        string    `json:"newName"`
 	NewDescription string    `json:"newDescription"`
 	NewLocation    string    `json:"newLocation"`
-	NewOwnerId     int64     `json:"newOwnerId"`
+	NewOwnerId     string    `json:"newOwnerId"`
 	NewRooms       []RoomUpd `json:"newRooms"`
 }

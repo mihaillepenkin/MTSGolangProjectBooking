@@ -11,7 +11,7 @@ type Hotel struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 	Location    string `json:"location"`
-	OwnerId     int64  `json:"ownerId"`
+	OwnerId     string `json:"ownerId"`
 	Rooms       []Room `json:"rooms"`
 }
 

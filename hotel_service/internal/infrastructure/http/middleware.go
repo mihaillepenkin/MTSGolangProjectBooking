@@ -13,7 +13,7 @@ import (
 )
 
 type JWTClaims struct {
-	UserId int64  `json:"sub"`
+	UserId string `json:"sub"`
 	Role   string `json:"role"`
 	Email  string `json:"email"`
 	jwt.RegisteredClaims

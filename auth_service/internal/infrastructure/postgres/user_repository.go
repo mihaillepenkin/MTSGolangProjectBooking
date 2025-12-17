@@ -4,6 +4,7 @@ import (
 	"auth_service/internal/domain/entity"
 	"database/sql"
 	"fmt"
+	"log"
 )
 
 type UserRepoPG struct {
@@ -47,7 +48,8 @@ func (rep *UserRepoPG) GetUserByEmail(email string) (*entity.User, error) {
 }
 func (rep *UserRepoPG) CheckUserByEmail(email string) bool {
 	_, err := rep.GetUserByEmail(email)
-	return err != nil
+	log.Printf("error checking user by email %s: %v", email, err)
+	return err == nil
 }
 
 func (rep *UserRepoPG) CreateUser(user *entity.User) error {
@@ -59,7 +61,7 @@ func (rep *UserRepoPG) CreateUser(user *entity.User) error {
 
 	_, err = tx.Exec(`INSERT INTO users (name, role, email, password) VALUES ($1, $2, $3, $4)`,
 		user.Name, user.Role, user.Email, user.Passwrd)
-	if (err != nil) {
+	if err != nil {
 		return err
 	}
 
@@ -67,6 +69,5 @@ func (rep *UserRepoPG) CreateUser(user *entity.User) error {
 		return fmt.Errorf("failed to commit transaction: %w", err)
 	}
 	return nil
-	
-	
+
 }

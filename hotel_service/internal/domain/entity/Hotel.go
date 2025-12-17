@@ -5,6 +5,6 @@ type Hotel struct {
 	Name        string
 	Description string
 	Location    string
-	OwnerId     int64
+	OwnerId     string
 	Rooms       []Room
 }

@@ -26,7 +26,7 @@ var (
 		Name:        "Hotel 1",
 		Description: "Hotel Description",
 		Location:    "Moscow",
-		OwnerId:     13,
+		OwnerId:     "13Ab",
 		Rooms:       []entity.Room{{Id: 1, Number: 567, Price: 789, HotelId: 1}},
 	}
 	testHotelInfoUpd = entity.Hotel{
@@ -34,7 +34,7 @@ var (
 		Name:        "Hotel 1",
 		Description: "Hotel Description",
 		Location:    "Moscow, Main street",
-		OwnerId:     13,
+		OwnerId:     "13Ab",
 		Rooms:       []entity.Room{{Id: 1, Number: 567, Price: 897, HotelId: 1}},
 	}
 	testHotelList = []entity.Hotel{testHotelInfoUpd}
@@ -97,7 +97,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestHotelRepositoryAddHotelInfo(t *testing.T) {
-	hotelInfo, err := testRepo.AddHotelInfo("Hotel 1", "Hotel Description", "Moscow", 13, []request.Room{{Number: 567, Price: 789}})
+	hotelInfo, err := testRepo.AddHotelInfo("Hotel 1", "Hotel Description", "Moscow", "13Ab", []request.Room{{Number: 567, Price: 789}})
 	if err != nil {
 		t.Fatalf("error adding hotelInfo: %v", err)
 	}
@@ -108,7 +108,7 @@ func TestHotelRepositoryAddHotelInfo(t *testing.T) {
 }
 
 func TestHotelRepositoryUpdateHotelInfo(t *testing.T) {
-	hotelInfoUpd, err := testRepo.UpdateHotelInfo(1, "Hotel 1", "Hotel Description", "Moscow, Main street", 13, []request.RoomUpd{{Id: 1, Number: 567, Price: 897}})
+	hotelInfoUpd, err := testRepo.UpdateHotelInfo(1, "Hotel 1", "Hotel Description", "Moscow, Main street", "13Ab", []request.RoomUpd{{Id: 1, Number: 567, Price: 897}})
 	if err != nil {
 		t.Fatalf("error updating hotelInfo: %v", err)
 	}
@@ -130,7 +130,7 @@ func TestHotelRepositoryGetAllHotels(t *testing.T) {
 }
 
 func TestHotelRepositoryCheckHotelOwner(t *testing.T) {
-	isHotelOwner, err := testRepo.CheckHotelOwner(1, 17)
+	isHotelOwner, err := testRepo.CheckHotelOwner(1, "17Cd")
 	if err != nil {
 		t.Fatalf("error checking hotel owner: %v", err)
 	}

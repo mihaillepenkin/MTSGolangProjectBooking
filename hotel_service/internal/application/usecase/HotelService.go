@@ -38,7 +38,7 @@ func (hs *HotelService) GetAllHotels() (response.AllHotelsInfoResponseDto, error
 	return response.AllHotelsInfoResponseDto{Hotels: result, Message: "Список отелей получен успешно", Error: ""}, nil
 }
 
-func (hs *HotelService) AddHotelInfo(hotelInfo *request.HotelInfoAdditionRequestDto, userId int64) (response.HotelInfoResponseDto, error) {
+func (hs *HotelService) AddHotelInfo(hotelInfo *request.HotelInfoAdditionRequestDto, userId string) (response.HotelInfoResponseDto, error) {
 	ifHotelExists, err := hs.hotelRepository.CheckIfHotelExists(hotelInfo.Name, hotelInfo.Location)
 	if err != nil {
 		slog.Error("Ошибка в HotelRepository, метод CheckIfHotelExists: " + err.Error())
@@ -62,7 +62,7 @@ func (hs *HotelService) AddHotelInfo(hotelInfo *request.HotelInfoAdditionRequest
 	return response.HotelInfoResponseDto{Id: hotel.Id, Name: hotel.Name, Location: hotel.Location, OwnerId: hotel.OwnerId, Rooms: rooms, Message: "Отель успешно добавлен", Error: ""}, nil
 }
 
-func (hs *HotelService) UpdateHotelInfo(newHotelInfo *request.HotelInfoUpdateRequestDto, userId int64) (response.HotelInfoResponseDto, error) {
+func (hs *HotelService) UpdateHotelInfo(newHotelInfo *request.HotelInfoUpdateRequestDto, userId string) (response.HotelInfoResponseDto, error) {
 	isHotelOwner, err := hs.hotelRepository.CheckHotelOwner(newHotelInfo.Id, userId)
 	if err != nil {
 		slog.Error("Ошибка в HotelRepository, метод CheckHotelOwner: " + err.Error())

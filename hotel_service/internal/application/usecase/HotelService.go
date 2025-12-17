@@ -39,19 +39,16 @@ func (hs *HotelService) GetAllHotels() (response.AllHotelsInfoResponseDto, error
 }
 
 func (hs *HotelService) AddHotelInfo(hotelInfo *request.HotelInfoAdditionRequestDto, userId int64) (response.HotelInfoResponseDto, error) {
-	if userId != hotelInfo.OwnerId {
-		return response.HotelInfoResponseDto{Message: "Ошибка при добавлении информации об отеле", Error: "403"}, errors.New("user is not hotel owner")
-	}
 	ifHotelExists, err := hs.hotelRepository.CheckIfHotelExists(hotelInfo.Name, hotelInfo.Location)
 	if err != nil {
 		slog.Error("Ошибка в HotelRepository, метод CheckIfHotelExists: " + err.Error())
 		return response.HotelInfoResponseDto{Message: "Ошибка при добавлении информации об отеле", Error: "500"}, errors.New("ошибка в ходе работы с БД в репозитории")
 	}
 	if ifHotelExists {
-		return response.HotelInfoResponseDto{Message: "Ошибка при добавлении информации об отеле", Error: "409"}, errors.New("hotel info already exists")
+		return response.HotelInfoResponseDto{Message: "Ошибка при добавлении информации об отеле", Error: "409"}, errors.New("информация об отеле уже существует")
 	}
 
-	hotel, err := hs.hotelRepository.AddHotelInfo(hotelInfo.Name, hotelInfo.Description, hotelInfo.Location, hotelInfo.OwnerId, hotelInfo.Rooms)
+	hotel, err := hs.hotelRepository.AddHotelInfo(hotelInfo.Name, hotelInfo.Description, hotelInfo.Location, userId, hotelInfo.Rooms)
 	if err != nil {
 		slog.Error("Ошибка в HotelRepository, метод AddHotelInfo: " + err.Error())
 		return response.HotelInfoResponseDto{Message: "Ошибка при добавлении информации об отеле", Error: "500"}, errors.New("ошибка в ходе работы с БД в репозитории")
@@ -72,7 +69,7 @@ func (hs *HotelService) UpdateHotelInfo(newHotelInfo *request.HotelInfoUpdateReq
 		return response.HotelInfoResponseDto{Message: "Ошибка при обновлении информации об отеле", Error: "500"}, errors.New("ошибка в ходе работы с БД в репозитории")
 	}
 	if !isHotelOwner {
-		return response.HotelInfoResponseDto{Message: "Ошибка при обновлении информации об отеле", Error: "403"}, errors.New("user is not hotel owner")
+		return response.HotelInfoResponseDto{Message: "Ошибка при обновлении информации об отеле", Error: "403"}, errors.New("пользователь не является владельцем отеля")
 	}
 
 	hotelUpd, err := hs.hotelRepository.UpdateHotelInfo(newHotelInfo.Id, newHotelInfo.NewName, newHotelInfo.NewDescription, newHotelInfo.NewLocation, newHotelInfo.NewOwnerId, newHotelInfo.NewRooms)

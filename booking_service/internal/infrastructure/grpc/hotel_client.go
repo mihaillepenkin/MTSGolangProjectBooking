@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"log/slog"
+	"time"
 
 	grpchotel "github.com/Vlad-Ali/MTSGolangProjectBooking-protos/gen/proto/hotel"
 	"github.com/mihaillepenkin/MTSGolangProjectBooking/booking_service/internal/domain/hotel"
@@ -22,7 +23,6 @@ func NewHotelClient(client grpchotel.HotelClient) *HotelClient {
 
 func (h *HotelClient) IsHotelier(ctx context.Context, userID string, hotelID int64) (bool, error) {
 	request := &grpchotel.IsHotelierRequest{UserID: userID, HotelID: hotelID}
-
 	response, err := h.client.IsHotelier(ctx, request)
 	if err != nil {
 		st, ok := status.FromError(err)
@@ -47,7 +47,10 @@ func (h *HotelClient) IsHotelier(ctx context.Context, userID string, hotelID int
 func (h *HotelClient) GetRoomInfo(ctx context.Context, hotelID int64, roomID int64) (*hotel.RoomInfo, error) {
 	request := &grpchotel.RoomInfoRequest{HotelID: hotelID, RoomID: roomID}
 
-	response, err := h.client.GetRoomInfo(ctx, request)
+	newCtx, cancel := context.WithTimeout(ctx, time.Second*2)
+	defer cancel()
+
+	response, err := h.client.GetRoomInfo(newCtx, request)
 	if err != nil {
 		st, ok := status.FromError(err)
 		if !ok {

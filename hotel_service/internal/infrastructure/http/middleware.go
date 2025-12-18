@@ -3,13 +3,11 @@ package api
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"net/http"
 	"os"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/joho/godotenv"
 )
 
 type JWTClaims struct {
@@ -48,12 +46,6 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		}
 
 		token := parts[1]
-		err := godotenv.Load()
-		if err != nil {
-			slog.Error(err.Error())
-			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-			return
-		}
 		parsedToken, err := jwt.ParseWithClaims(token, &JWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
@@ -75,7 +67,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		if r.URL.Path == "/api/v1/hotels" {
 			switch r.Method {
 			case "GET":
-				if claims.Role == "hotelier" {
+				if claims.Role != "client" {
 					http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
 					return
 				}

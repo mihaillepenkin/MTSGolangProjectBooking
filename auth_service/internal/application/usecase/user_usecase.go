@@ -82,23 +82,6 @@ func (u *UserUseCase) Login(email string, passwrd string) *dto.LoginOutputDto {
 		}
 	}
 
-	/*refresh, rexp, err := u.jwt.GenerateRefreshToken(user)
-	if err != nil {
-		return &dto.LoginOutputDto{
-			Token:  "",
-			Msg:    fmt.Sprintf("Error in UserService: %w", err),
-			Status: "error",
-		}
-	}
-
-	if err := u.jwtRepo.SaveRefreshToken(user.ID, refresh, rexp); err != nil {
-		return &dto.LoginOutputDto{
-			Token:  "",
-			Msg:    fmt.Sprintf("Error in UserService: %w", err),
-			Status: "error",
-		}
-	}*/
-
 	return &dto.LoginOutputDto{
 		Token:  access,
 		Msg:    "",

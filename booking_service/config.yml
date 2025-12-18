@@ -1,5 +1,5 @@
 grpc:
-  address: ":50051"
+  address: "hotel-service:50051"
 http:
   address: ":8080"
   host: "booking-service"
@@ -9,7 +9,7 @@ http:
   allowed_origins: ["http://payment-service:8083"]
   webhook_handler_endpoint: "/api/webhook-callback"
 payment_system:
-  create_endpoint: "payment-service:8083/api/payment"
+  create_endpoint: "http://payment-service:8083/api/payment"
 postgres:
   dsn: "postgresql://postgres:123@booking-postgres:5432/booking?sslmode=disable"
   max_connections: 25

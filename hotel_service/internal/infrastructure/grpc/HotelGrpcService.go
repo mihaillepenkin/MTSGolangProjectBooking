@@ -3,6 +3,7 @@ package grpc2
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"hotel_service/internal/infrastructure/db"
 	"log/slog"
 
@@ -33,6 +34,12 @@ func (hgs *HotelGrpcService) IsHotelier(ctx context.Context, r *hotel.IsHotelier
 
 func (hgs *HotelGrpcService) GetRoomInfo(ctx context.Context, r *hotel.RoomInfoRequest) (*hotel.RoomInfoResponse, error) {
 	roomNumber, price, currency, hotelName, err := hgs.hotelGrpcRepository.GetRoomInfo(r.HotelID, r.RoomID)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		slog.Error("Не найден информация о номере", "hotelID", r.HotelID, "roomID", r.RoomID)
+		return nil, status.Error(codes.NotFound, "Room information not found")
+	}
+
 	if err != nil {
 		slog.Error("Ошибка в HotelGrpcRepository, метод GetRoomInfo: " + err.Error())
 		return nil, status.Error(codes.Internal, "Ошибка при получении информации о номере в отеле")

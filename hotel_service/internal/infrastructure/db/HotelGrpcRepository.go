@@ -3,7 +3,6 @@ package db
 import (
 	"database/sql"
 	"log/slog"
-	"strconv"
 )
 
 type HotelGrpcRepository struct {
@@ -15,29 +14,14 @@ func (hgr *HotelGrpcRepository) Initialize(db *sql.DB) {
 }
 
 func (hgr *HotelGrpcRepository) IsHotelier(hotelId int64, userId string) (bool, error) {
-	tx, err := hgr.Db.Begin()
-	if err != nil {
-		return false, err
-	}
-	defer func(tx *sql.Tx) {
-		err := tx.Rollback()
-		if err != nil {
-			slog.Error(err.Error())
-		}
-	}(tx)
-
-	row := tx.QueryRow("SELECT owner_id FROM hotels WHERE id = $1", hotelId)
-	var ownerId int64
-	err = row.Scan(&ownerId)
-	if err != nil {
-		return false, err
-	}
-	err = tx.Commit()
+	row := hgr.Db.QueryRow("SELECT owner_id FROM hotels WHERE id = $1", hotelId)
+	var ownerId string
+	err := row.Scan(&ownerId)
 	if err != nil {
 		return false, err
 	}
 
-	if strconv.FormatInt(ownerId, 10) != userId {
+	if ownerId != userId {
 		return false, nil
 	}
 

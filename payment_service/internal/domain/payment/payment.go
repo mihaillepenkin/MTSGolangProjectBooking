@@ -6,7 +6,7 @@ type Payment struct {
 	Price    float64 `json:"price"`
 	Currency string  `json:"currency"`
 	URL      string  `json:"url"`
-	Metadata string  `json:"metadata"`
+	Metadata any     `json:"metadata"`
 }
 
 func ValidatePayment(payment *Payment) error {

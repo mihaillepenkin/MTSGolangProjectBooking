@@ -2,10 +2,12 @@ package main
 
 import (
 	"context"
+	"errors"
 	"hotel_service/internal/config"
 	"hotel_service/internal/infrastructure/grpc"
 	"hotel_service/internal/infrastructure/http"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -43,11 +45,14 @@ func main() {
 		slog.Error("Error configuring gRPC server")
 		return
 	}
-	err = grpcServer.Serve(listener)
-	if err != nil {
-		slog.Error("Error running gRPC server")
-		return
-	}
+
+	go func() {
+		err = grpcServer.Serve(listener)
+		if err != nil {
+			slog.Error("Error running gRPC server", "error", err)
+			return
+		}
+	}()
 	slog.Info("gRPC server is running...")
 
 	hotelHandler := api.HotelHandler{}
@@ -59,11 +64,11 @@ func main() {
 	server := cfg.ConfigureHttpServer(&handler)
 	go func() {
 		err := server.ListenAndServe()
-		slog.Info("Http server is running...")
-		if err != nil {
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
 			slog.Error(err.Error())
 		}
 	}()
+	slog.Info("Http server is running...")
 
 	osSignals := make(chan os.Signal, 1)
 	signal.Notify(osSignals, os.Interrupt, syscall.SIGTERM)

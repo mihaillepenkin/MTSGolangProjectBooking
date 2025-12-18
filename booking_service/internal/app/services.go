@@ -18,7 +18,7 @@ type Services struct {
 }
 
 func NewServices(cfg *Config, repos *Repositories, txManager transactionmanager.TransactionManager[string]) *Services {
-	bookingSaver := bookingsaver.NewBookingSaver(repos.BookingRepository, txManager, repos.HotelRepo, repos.PaymentSender, cfg.HTTPConfig.Host+":"+cfg.HTTPConfig.Port+cfg.HTTPConfig.WebhookHandlerEndpoint)
+	bookingSaver := bookingsaver.NewBookingSaver(repos.BookingRepository, txManager, repos.HotelRepo, repos.PaymentSender, "http://booking-service:"+cfg.HTTPConfig.Port+cfg.HTTPConfig.WebhookHandlerEndpoint)
 	bookingProvider := bookingprovider.NewBookingProvider(repos.BookingRepository, repos.HotelRepo)
 	tokenService := jwtservice.NewJwtService(cfg.JWTConfig.SecretKey)
 	eventSaver := eventsaver.NewEventSaver(repos.Producer, bookingSaver)
